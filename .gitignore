@@ -1,0 +1,9 @@
+*.png
+*.pdf
+*.tga
+*.txt
+*.pickle
+*.DS_Store
+sims
+analysis/chap
+analysis/vmd
