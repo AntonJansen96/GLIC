@@ -1,0 +1,24 @@
+pbc box off
+axes location Off
+display backgroundgradient Off
+color Display Background white
+# label hide Atoms all
+display fps off
+light 2 on
+light 3 on
+
+# TURNING THIS OFF MAKES RENDERING MUCH FASTER
+# display ambientocclusion on
+# display shadows on
+# display dof on
+
+# Change rep 1 to 3 to AOChalky
+for {set i 0} {$i < 4} {incr i} {
+    mol modmaterial 0 $i AOChalky
+}
+
+# Change chain A color to cyan
+# mol modcolor 0 0 ColorID 10
+
+# render TachyonInternal vmdscene.tga -res 500 500 -trans_max_surfaces 1
+render snapshot vmdscene.tga /usr/bin/open %s
