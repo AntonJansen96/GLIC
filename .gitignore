@@ -1,9 +1,14 @@
-*.png
-*.pdf
-*.tga
-*.txt
-*.pickle
-*.DS_Store
-sims
-analysis/chap
-analysis/vmd
+# ignore everything
+*
+
+# but not (certain) directories
+# !*/
+!/sims
+!/analysis/
+!/analysis/vmd
+!/analysis/rmsd
+
+# exceptions
+!*.sh
+!*.py
+!*.vmd
