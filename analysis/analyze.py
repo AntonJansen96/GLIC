@@ -74,6 +74,7 @@ class ReplicaSet:
 class GLICSims:
     """Holds the data for all four GLIC replica sets"""
     def __init__(self, folders, replicas, dt, b):
+        os.chdir('../sims')
 
         self.d_replicaSet = []
         for ii in folders:
@@ -139,6 +140,8 @@ class GLICSims:
             self.d_replicaSet.append(ReplicaSet(ii, replicaList))
 
             os.chdir('..')
+
+        os.chdir('../analysis')
 
         # DIRECTORY STRUCTURE
         if not os.path.isdir('lambdaplots'):
