@@ -2,6 +2,7 @@
 
 import os
 import MDAnalysis
+import multiprocessing as mp
 from science.utility import createIndexFile
 from science.utility import gromacs
 from science.utility import resname2triplet
@@ -103,8 +104,30 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
 
 if __name__ == "__main__":
 
-    pdb       = '../sims/4HFI_4/01/CA.pdb'
-    xtc       = '../sims/4HFI_4/01/MD_conv.xtc'
-    target    = 'resid 35 and chainid A and name OE1 OE2'
+    # WRAPPER FOR MULTITHREADING
+    def task(resid, sim, rep, chain):
+        pdb     = '../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
+        xtc     = '../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
+        target  = 'resid {} and chainid {} and name OE1 OE2 OD1 OD2 NE2 ND1'.format(resid, chain)
+        outfile = '{}_{}_{}_{}.txt'.format(sim, rep, resid, chain)
 
-    doContactOccupancy(pdb, xtc, target)
+        thread = mp.current_process().pid
+        idxA   = 'select' + str(thread) + '.ndx'
+        idxB   = 'output' + str(thread) + '.ndx'
+
+        doContactOccupancy(pdb, xtc, target, outfile=outfile, idxA=idxA, idxB=idxB)
+
+    # PREPARE ITERABLES
+    items = []
+    for resid in [35]:
+        for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+            for rep in [1, 2, 3, 4]:
+                for chain in ['A', 'B', 'C', 'D', 'E']:
+                    items.append((resid, sim, rep, chain))
+
+    # RUN MULTITHREADED
+    pool = mp.Pool(processes=mp.cpu_count())
+    pool.starmap(task, items, chunksize=1)
+
+    # CLEANUP
+    os.system('rm -f contacts/*.ndx contacts/\\#*\\#')
