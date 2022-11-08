@@ -1,32 +1,42 @@
 #!/bin/python3
 
+import os
 import MDAnalysis
 from science.utility import createIndexFile
 from science.utility import gromacs
 from science.utility import resname2triplet
+from science.utility import exists
 
 # Input parameters
 cutoff    = 0.40  # nm
 pdb       = '../sims/4HFI_4/01/CA.pdb'
 xtc       = '../sims/4HFI_4/01/MD_conv.xtc'
-
 target    = 'resid 35 and chainid A and name OE1 OE2'
 reference = 'protein'
+idxNameA  = 'select.ndx'  # Name of the index file we make for reference and target.
+idxNameB  = 'output.ndx'  # Name of the index file for output of atoms within cutoff.
+outputDir = 'contacts'
+
+if not exists(outputDir):
+    os.mkdir(outputDir)
+
+idxNameA = outputDir + '/' + idxNameA
+idxNameB = outputDir + '/' + idxNameB
 
 # Create index file
-createIndexFile(pdb, 'test.ndx', [reference, target])
+createIndexFile(pdb, idxNameA, [reference, target])
 
 # Run gmx select to obtain an index file containing the ATOM NUMBERS within
 # the specified cutoff of the selection.
 select = 'group 0 and within {} of group 1'.format(cutoff)
-gromacs('select -f {} -n test.ndx -on out.ndx -select \'{}\''.format(xtc, select))
+gromacs('select -f {} -n {} -on {} -select \'{}\''.format(xtc, idxNameA, idxNameB, select))
 
-# Parse the out.ndx file into a list of frames where each frame is a list of atom numbers.
+# Parse the idxNameB file into a list of frames where each frame is a list of atom numbers.
 # We first parse the file into blocks, which are separated by an empty line.
 # Then, within one block, we ignore the empty lines, and lines starting with '['.
 # We add together any remaining lines (containing the atom numbers.)
 frameList = []
-for block in open('out.ndx').read().split('\n\n'):
+for block in open(idxNameB).read().split('\n\n'):
 
     totalString = ""
     for line in block.split('\n'):
@@ -68,8 +78,8 @@ for frame in frameList:
 bins = dict(sorted(bins.items(), key=lambda item: item[1], reverse=True))
 
 # Write final output file.
-with open('{}.txt'.format(target).replace(' ', '_'), 'w') as file:
-    file.write('# Contact occupancy for \'{}\' (reference = \'{}\'), cutoff = {} nm\n'.format(target, reference, cutoff))
+with open('{}/{}.txt'.format(outputDir, target).replace(' ', '_'), 'w') as file:
+    file.write('# Contact occupancy for \'{}\' (reference \'{}\'), cutoff = {} nm\n'.format(target, reference, cutoff))
 
     for comb in bins:
         resLetter = resname2triplet(comb[2])
