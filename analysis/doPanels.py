@@ -7,72 +7,17 @@ import MDAnalysis.analysis.rms
 import os
 import pathos.multiprocessing as mp
 import numpy as np
-import scipy.stats as stats
 import copy
 
 from science.utility import gromacs
 from science.utility import exists
 from science.parsing import loadxvg
 from science.parsing import loadCol
+from science.cphmd import getLambdaFileIndices
+from science.utility import ttestPass
 
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
-
-
-def getLambdaFileIndices(structure, resid):
-    """Returns an array containing the lambda-file indices for the specified resid.
-
-    Args:
-        structure (string): pdb file name.
-        resid (int): residue id.
-
-    Returns:
-       list: List of lambda indices.
-    """
-    u                  = MDAnalysis.Universe(structure)
-    numChains          = len(u.segments) - 1
-    segmentAatoms      = u.segments[0].atoms
-    titratableAtoms    = segmentAatoms.select_atoms('resname ASPT GLUT HSPT')
-    titratableResnames = list(titratableAtoms.residues.resnames)
-    titratableResids   = list(titratableAtoms.residues.resids)
-    targetidx          = titratableResids.index(resid)
-
-    numASPTGLUT        = len(segmentAatoms.select_atoms('resname ASPT GLUT').residues)
-    numHSPT            = len(segmentAatoms.select_atoms('resname HSPT').residues)
-    factor             = numASPTGLUT + 3 * numHSPT
-
-    count = 1
-    for idx in range(0, len(titratableResnames)):
-
-        if idx == targetidx:
-            array = []
-            for ii in range(0, numChains):
-                array.append(count + ii * factor)
-            return array
-
-        if titratableResnames[idx] in ['ASPT', 'GLUT']:
-            count += 1
-
-        elif titratableResnames[idx] == 'HSPT':
-            count += 3
-
-
-def ttestPass(sample1, sample2, alpha=0.05):
-    """Returns True if the means of sample1 and sample2 differ SIGNIFICANTLY.
-    That is, with a confidence interval of 1 - alpha %. Uses Welch's t-test.
-
-    Args:
-        sample1 (list): Some sample.
-        sample2 (list): Sample to compare to.
-        alpha (float, optional): Significance of the test. Defaults to 0.05.
-
-    Returns:
-        bool: Whether or not the two sample means differ signifcantly.
-    """
-
-    pvalue = stats.ttest_ind(sample1, sample2, equal_var=False)[1]
-
-    return bool(pvalue < alpha)
 
 
 class PanelBuilder:
