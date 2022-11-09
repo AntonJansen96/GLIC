@@ -1,30 +1,32 @@
 #!/bin/python3
 
 import matplotlib
-import science as sc
+
+from science.cphmd import getLambdaFileIndices
+from science.cphmd import protonation
+from science.parsing import loadCol
+from science.parsing import loadxvg
+
 
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
 
-
-# parameters
-topContacts = 5
-
-# superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
-# Each of these four dictionaries contains the follwing key-value pairs:
-# key = the name of any residue encountered in the 20 list.txt files.
-# val = a list of occupancies.
-superData = {'4HFI_4': {}, '4HFI_7': {}, '6ZGD_4': {}, '6ZGD_7': {}}
-
 for target in [35]:
+
+    # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
+    # Each of these four dictionaries contains the follwing key-value pairs:
+    # key = the name of any residue encountered in the 20 list.txt files.
+    # val = a list of occupancies containing reps x chains = 20 values.
+    superData = {'4HFI_4': {}, '4HFI_7': {}, '6ZGD_4': {}, '6ZGD_7': {}}
+
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
         for rep in [1, 2, 3, 4]:
             for chain in ['A', 'B', 'C', 'D', 'E']:
 
                 fileName = 'contacts/{}_{}_{}_{}.txt'.format(sim, rep, target, chain)
-                list1 = sc.parsing.loadCol(fileName, col=1, header=1)  # List of names ('T158')
-                list2 = sc.parsing.loadCol(fileName, col=2, header=1)  # List of chains ('A')
-                list3 = sc.parsing.loadCol(fileName, col=3, header=1)  # List of occs (0.951)
+                list1 = loadCol(fileName, col=1, header=1)  # List of names ('T158')
+                list2 = loadCol(fileName, col=2, header=1)  # List of chains ('A')
+                list3 = loadCol(fileName, col=3, header=1)  # List of occs (0.951)
 
                 # Change the chainIDs in list2 to either '', 'c', or 'p':
                 for idx in range(0, len(list2)):
@@ -39,8 +41,6 @@ for target in [35]:
                     # IF we have this, the subunit containing the contact is principal.
                     elif (chain == 'A' and X == 'B') or (chain == 'B' and X == 'C') or (chain == 'C' and X == 'D') or (chain == 'D' and X == 'E') or (chain == 'E' and X == 'A'):
                         list2[idx] = 'p'
-                    else:
-                        print("how the fuck did we end up here?")
 
                 # Add the '', 'c', 'p' identifier to the names in list1:
                 for idx in range(0, len(list1)):
@@ -62,3 +62,21 @@ for target in [35]:
         for key in superData[sim]:
             if len(superData[sim][key]) != 20:
                 superData[sim][key] += ((20 - len(superData[sim][key])) * [0.0])
+
+    # print(superData['4HFI_4'])
+    # The SuperData data structure should now be completed.
+
+    # protoData is a dictionary that holds four lists. Each list contains 20
+    # protonation values, where each value is the average protonation of a rep x chain.
+    protoData = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
+    lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
+
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        for rep in [1, 2, 3, 4]:
+            for idx in lambdaIndices:
+
+                x = loadxvg('../sims/{}/{:02d}/cphmd-coord-{}.xvg'.format(sim, rep, idx), dt=1000, b=0)[1]
+                protoData[sim].append(protonation(x))
+
+    print(protoData)
+    # The protoData data structure should now be completed.
