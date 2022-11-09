@@ -198,10 +198,91 @@ for target in [35]:
     u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
     triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
     letter = triplet2letter(triplet)
-    plt.title('Residue {}{}'.format(letter, target))
+    plt.title('Residue {}{} (top {} contacts overall)'.format(letter, target, topNum))
 
     plt.ylim(0, 1.1)
     plt.ylabel('Protonation / contact occupancy')
     plt.tight_layout()
     plt.savefig('contacts/{}.png'.format(target))
+    plt.clf()
+
+    #---------------------------------------------------------------------------
+
+    # Make another bar plot, but now for just the INTER-subunit contacts
+    # (so either 'c' or 'p' relative to target).
+
+    # Initialize required data structures
+    nameList = []
+    meanList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
+    serrList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
+
+    # First set of bars is protonation:
+    nameList.append('protonation')
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        meanList[sim].append(np.mean(protoData[sim]))
+        serrList[sim].append(np.std(protoData[sim]) / np.sqrt(len(protoData[sim])))
+
+    # Gather occupancy data:
+    count = 0
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        for key in superData[inWhich]:
+
+            # This if-statement makes sure we only get inter-subunit contacts.
+            if key[-1] not in ['c', 'p']:
+                continue
+
+            if sim == inWhich:
+                nameList.append(key)
+
+            meanList[sim].append(np.mean(superData[sim][key]))
+            serrList[sim].append(np.std(superData[sim][key]) / np.sqrt(len(superData[sim][key])))
+
+            count += 1
+            if count == topNum:
+                count = 0
+                break
+
+    # Some plotting stuff
+    width = 0.2
+    x     = np.arange(len(nameList))
+    fig   = plt.figure(figsize=(10, 6))
+    ax    = fig.add_subplot()
+
+    # 6ZGD_7
+    mean4 = meanList['6ZGD_7']
+    serr4 = serrList['6ZGD_7']
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, pH 7')
+    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # 6ZGD_4
+    mean3 = meanList['6ZGD_4']
+    serr3 = serrList['6ZGD_4']
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, pH 4')
+    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    # 4HFI_7
+    mean2 = meanList['4HFI_7']
+    serr2 = serrList['4HFI_7']
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
+    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # 4HFI_4
+    mean1 = meanList['4HFI_4']
+    serr1 = serrList['4HFI_4']
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
+    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    ax.set_xticks(x, nameList)
+    ax.legend(loc=1, prop={'size': 12})
+
+    # Vertical line to separate protonation bars from rest
+    plt.axvline(x=0.5, ymin=0, ymax=1.1, color='black', lw=2, linestyle=':')
+
+    # Do the title
+    plt.title('Residue {}{} (top {} inter-subunit contacts)'.format(letter, target, topNum))
+
+    plt.ylim(0, 1.1)
+    plt.ylabel('Protonation / contact occupancy')
+    plt.tight_layout()
+    plt.savefig('contacts/{}_inter.png'.format(target))
     plt.clf()
