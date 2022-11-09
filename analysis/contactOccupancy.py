@@ -74,8 +74,13 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
             resid   = u.atoms[atomNum - 1].resid
             chain   = u.atoms[atomNum - 1].chainID
             resname = u.atoms[atomNum - 1].resname
-            # make the tuple and append to temporary list
-            contacts.append((resid, chain, resname))
+            # make the tuple and append to temporary 'contacts' list.
+            if resname in ['NA' or 'CL']:
+                # NA is simply NA, resid or chain is not relevant.
+                contacts.append(('', '', resname))
+            else:
+                contacts.append((resid, chain, resname))
+
         # we use a set here as we may have contacts with multiple atoms in the same
         # residue, which DO NOT count double.
         for comb in set(contacts):
@@ -98,7 +103,10 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
 
     for comb in bins:
         resLetter = triplet2letter(comb[2])
-        file.write('{}{:<4d} {:2s} {:.4f}\n'.format(resLetter, comb[0], comb[1], bins[comb] / float(len(frameList))))
+        if resLetter in ['Na+', 'Cl-']:
+            file.write('{}      {:.4f}\n'.format(resLetter, bins[comb] / float(len(frameList))))
+        else:
+            file.write('{}{:<4d} {:2s} {:.4f}\n'.format(resLetter, comb[0], comb[1], bins[comb] / float(len(frameList))))
 
     file.close()
 
@@ -119,7 +127,7 @@ if __name__ == "__main__":
         idxA   = 'select' + str(thread) + '.ndx'
         idxB   = 'output' + str(thread) + '.ndx'
 
-        doContactOccupancy(pdb, xtc, target, outfile=outfile, idxA=idxA, idxB=idxB)
+        doContactOccupancy(pdb, xtc, target, outfile=outfile, idxA=idxA, idxB=idxB, ref='protein or resname NA')
 
     # PREPARE ITERABLES
     items = []
@@ -132,3 +140,10 @@ if __name__ == "__main__":
     # RUN MULTITHREADED
     pool = mp.Pool(processes=mp.cpu_count())
     pool.starmap(task, items, chunksize=1)
+
+# DEBUG
+# if __name__ == "__main__":
+#     pdb    = '../sims/6ZGD_7/01/CA.pdb'
+#     xtc    = '../sims/6ZGD_7/01/MD_conv.xtc'
+#     target = 'resid 35 and chainid D and name OE1 OE2 OD1 OD2 NE2 ND1'
+#     doContactOccupancy(pdb, xtc, target, ref='protein or resname NA')
