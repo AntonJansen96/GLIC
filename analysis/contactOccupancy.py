@@ -77,7 +77,7 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
             # make the tuple and append to temporary 'contacts' list.
             if resname in ['NA' or 'CL']:
                 # NA is simply NA, resid or chain is not relevant.
-                contacts.append(('', '', resname))
+                contacts.append(('', 'x', resname))
             else:
                 contacts.append((resid, chain, resname))
 
@@ -104,7 +104,7 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
     for comb in bins:
         resLetter = triplet2letter(comb[2])
         if resLetter in ['Na+', 'Cl-']:
-            file.write('{}      {:.4f}\n'.format(resLetter, bins[comb] / float(len(frameList))))
+            file.write('{}    {:2s} {:.4f}\n'.format(resLetter, comb[1], bins[comb] / float(len(frameList))))
         else:
             file.write('{}{:<4d} {:2s} {:.4f}\n'.format(resLetter, comb[0], comb[1], bins[comb] / float(len(frameList))))
 
