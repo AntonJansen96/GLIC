@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import matplotlib
+import numpy as np
 
 from science.cphmd import getLambdaFileIndices
 from science.cphmd import protonation
@@ -63,6 +64,17 @@ for target in [35]:
             if len(superData[sim][key]) != 20:
                 superData[sim][key] += ((20 - len(superData[sim][key])) * [0.0])
 
+    # Make sure all dictionaries contain all the same keys (initialize with lists
+    # containing only zeros if necessary). This is to prevent KeyErrors later.
+    sims = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
+    for ii in range(0, len(sims)):
+        for jj in range(0, len(sims)):
+            if ii == jj:
+                continue
+            for key in superData[sims[ii]]:
+                if key not in superData[sims[jj]]:
+                    superData[sims[jj]][key] = 20 * [0.0]
+
     # print(superData['4HFI_4'])
     # The SuperData data structure should now be completed.
 
@@ -78,5 +90,30 @@ for target in [35]:
                 x = loadxvg('../sims/{}/{:02d}/cphmd-coord-{}.xvg'.format(sim, rep, idx), dt=1000, b=0)[1]
                 protoData[sim].append(protonation(x))
 
-    print(protoData)
+    # print(protoData)
     # The protoData data structure should now be completed.
+
+    # Print our data structures to files for checking/debugging purposes.
+    with open('contacts/{}.dat'.format(target), 'w') as file:
+        file.write('#      | 4HFI_4                    | 4HFI_7                     | 6ZGD_4                     | 6ZGD_4\n')
+        file.write('# name | |pro| serr   |occ| serr   | |pro| serr   |occ|  serr   | |pro| serr   |occ|  serr   | |pro| serr   |occ|  serr\n')
+        for name in superData['4HFI_4']:
+            file.write('{:<6s} | {:.3f} {:.4f} {:.3f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f}\n'.format(
+                name,
+                np.mean(protoData['4HFI_4']),
+                np.std( protoData['4HFI_4']) / np.sqrt(len(protoData['4HFI_4'])),
+                np.mean(superData['4HFI_4'][name]),
+                np.std( superData['4HFI_4'][name]) / np.sqrt(len(superData['4HFI_4'][name])),
+                np.mean(protoData['4HFI_7']),
+                np.std( protoData['4HFI_7']) / np.sqrt(len(protoData['4HFI_7'])),
+                np.mean(superData['4HFI_7'][name]),
+                np.std( superData['4HFI_7'][name]) / np.sqrt(len(superData['4HFI_7'][name])),
+                np.mean(protoData['6ZGD_4']),
+                np.std( protoData['6ZGD_4']) / np.sqrt(len(protoData['6ZGD_4'])),
+                np.mean(superData['6ZGD_4'][name]),
+                np.std( superData['6ZGD_4'][name]) / np.sqrt(len(superData['6ZGD_4'][name])),
+                np.mean(protoData['6ZGD_7']),
+                np.std( protoData['6ZGD_7']) / np.sqrt(len(protoData['6ZGD_7'])),
+                np.mean(superData['6ZGD_7'][name]),
+                np.std( superData['6ZGD_7'][name]) / np.sqrt(len(superData['6ZGD_7'][name]))
+            ))
