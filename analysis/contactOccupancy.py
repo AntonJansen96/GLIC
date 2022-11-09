@@ -6,7 +6,7 @@ import multiprocessing as mp
 
 from science.utility import createIndexFile
 from science.utility import gromacs
-from science.utility import resname2triplet
+from science.utility import triplet2letter
 
 
 def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40, idxA='select.ndx', idxB='output.ndx', outputDir='contacts'):
@@ -97,7 +97,7 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
     file.write('# pdb = {}, xtc = {}, cutoff = {} nm\n'.format(pdb, xtc, cutoff))
 
     for comb in bins:
-        resLetter = resname2triplet(comb[2])
+        resLetter = triplet2letter(comb[2])
         file.write('{}{:<4d} {:2s} {:.4f}\n'.format(resLetter, comb[0], comb[1], bins[comb] / float(len(frameList))))
 
     file.close()
