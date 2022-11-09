@@ -1,13 +1,15 @@
 #!/bin/python3
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
+import MDAnalysis
 
 from science.cphmd import getLambdaFileIndices
 from science.cphmd import protonation
 from science.parsing import loadCol
 from science.parsing import loadxvg
-
+from science.utility import triplet2letter
 
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
@@ -15,8 +17,8 @@ matplotlib.rcParams.update({'font.size': 14})
 for target in [35]:
 
     # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
-    # Each of these four dictionaries contains the follwing key-value pairs:
-    # key = the name of any residue encountered in the 20 list.txt files.
+    # Each of these dictionaries contains the following key-value pairs:
+    # key = the name of any residue encountered in the 20 sim_rep_target_chain files.
     # val = a list of occupancies containing reps x chains = 20 values.
     superData = {'4HFI_4': {}, '4HFI_7': {}, '6ZGD_4': {}, '6ZGD_7': {}}
 
@@ -43,17 +45,17 @@ for target in [35]:
                     elif (chain == 'A' and X == 'B') or (chain == 'B' and X == 'C') or (chain == 'C' and X == 'D') or (chain == 'D' and X == 'E') or (chain == 'E' and X == 'A'):
                         list2[idx] = 'p'
 
-                # Add the '', 'c', 'p' identifier to the names in list1:
+                # Append the '', 'c', 'p' identifier to the names in list1:
                 for idx in range(0, len(list1)):
                     list1[idx] += list2[idx]
 
-                # Add the names and associated occupancies to superData.
+                # Add the names and associated occupancies to superData:
                 for idx in range(0, len(list1)):
                     # if there is already an entry for this name in superData
                     # simply add the occupancy to the existing list (value for said name).
                     if list1[idx] in superData[sim]:
                         superData[sim][list1[idx]].append(list3[idx])
-                    # Else, create the key-value pair:
+                    # Else, create the key-value pair and initialize with [occ]
                     else:
                         superData[sim][list1[idx]] = [list3[idx]]
 
@@ -78,6 +80,8 @@ for target in [35]:
     # print(superData['4HFI_4'])
     # The SuperData data structure should now be completed.
 
+    #---------------------------------------------------------------------------
+
     # protoData is a dictionary that holds four lists. Each list contains 20
     # protonation values, where each value is the average protonation of a rep x chain.
     protoData = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
@@ -92,6 +96,8 @@ for target in [35]:
 
     # print(protoData)
     # The protoData data structure should now be completed.
+
+    #---------------------------------------------------------------------------
 
     # Print our data structures to files for checking/debugging purposes.
     with open('contacts/{}.dat'.format(target), 'w') as file:
@@ -117,3 +123,85 @@ for target in [35]:
                 np.mean(superData['6ZGD_7'][name]),
                 np.std( superData['6ZGD_7'][name]) / np.sqrt(len(superData['6ZGD_7'][name]))
             ))
+
+    #---------------------------------------------------------------------------
+
+    # Here we do the actual plotting of the bar graphs.
+
+    topNum = 5              # Base the top 'topNum'
+    inWhich = '4HFI_4'      # contacts on sim 'inWhich'...
+
+    # Initialize required data structures
+    nameList = []
+    meanList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
+    serrList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
+
+    # First set of bars is protonation:
+    nameList.append('protonation')
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        meanList[sim].append(np.mean(protoData[sim]))
+        serrList[sim].append(np.std(protoData[sim]) / np.sqrt(len(protoData[sim])))
+
+    # Gather occupancy data:
+    count = 0
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        for key in superData[inWhich]:
+
+            if sim == inWhich:
+                nameList.append(key)
+
+            meanList[sim].append(np.mean(superData[sim][key]))
+            serrList[sim].append(np.std(superData[sim][key]) / np.sqrt(len(superData[sim][key])))
+
+            count += 1
+            if count == topNum:
+                count = 0
+                break
+
+    # Some plotting stuff
+    width = 0.2
+    x     = np.arange(len(nameList))
+    fig   = plt.figure(figsize=(10, 6))
+    ax    = fig.add_subplot()
+
+    # 6ZGD_7
+    mean4 = meanList['6ZGD_7']
+    serr4 = serrList['6ZGD_7']
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, pH 7')
+    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # 6ZGD_4
+    mean3 = meanList['6ZGD_4']
+    serr3 = serrList['6ZGD_4']
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, pH 4')
+    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    # 4HFI_7
+    mean2 = meanList['4HFI_7']
+    serr2 = serrList['4HFI_7']
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
+    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # 4HFI_4
+    mean1 = meanList['4HFI_4']
+    serr1 = serrList['4HFI_4']
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
+    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    ax.set_xticks(x, nameList)
+    ax.legend(loc=1, prop={'size': 12})
+
+    # Vertical line to separate protonation bars from rest
+    plt.axvline(x=0.5, ymin=0, ymax=1.1, color='black', lw=2, linestyle=':')
+
+    # Do the title
+    u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
+    triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
+    letter = triplet2letter(triplet)
+    plt.title('Residue {}{}'.format(letter, target))
+
+    plt.ylim(0, 1.1)
+    plt.ylabel('Protonation / contact occupancy')
+    plt.tight_layout()
+    plt.savefig('contacts/{}.png'.format(target))
+    plt.clf()
