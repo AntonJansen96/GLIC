@@ -14,7 +14,9 @@ from science.utility import triplet2letter
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
 
-for target in [35]:
+# 145, 161, 185, 282 are bad (have fewer than 5 inter-subunit contacts)
+
+for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]:
 
     # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
     # Each of these dictionaries contains the following key-value pairs:
@@ -163,8 +165,12 @@ for target in [35]:
     # We always want Na+ as the final set of bars
     nameList.append('Na+')
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-        meanList[sim].append(np.mean(superData[sim]['Na+']))
-        serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+        try:
+            meanList[sim].append(np.mean(superData[sim]['Na+']))
+            serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+        except KeyError:
+            meanList[sim].append(0.0)
+            serrList[sim].append(0.0)
 
     # Some plotting stuff
     width = 0.2
@@ -213,6 +219,7 @@ for target in [35]:
     plt.tight_layout()
     plt.savefig('contacts/{}.png'.format(target))
     plt.clf()
+    plt.close()
 
     #---------------------------------------------------------------------------
 
@@ -253,8 +260,12 @@ for target in [35]:
     # We always want Na+ as the final set of bars
     nameList.append('Na+')
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-        meanList[sim].append(np.mean(superData[sim]['Na+']))
-        serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+        try:
+            meanList[sim].append(np.mean(superData[sim]['Na+']))
+            serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+        except KeyError:
+            meanList[sim].append(0.0)
+            serrList[sim].append(0.0)
 
     # Some plotting stuff
     width = 0.2
@@ -300,3 +311,4 @@ for target in [35]:
     plt.tight_layout()
     plt.savefig('contacts/{}_inter.png'.format(target))
     plt.clf()
+    plt.close()
