@@ -36,7 +36,9 @@ for target in [35]:
                     X = list2[idx]
 
                     # If the contact is in the same chain, remove the letter.
-                    if chain == X:
+                    # The second conditional (chain = 'x') we add because 'x' is
+                    # the default chain for NA, CL, etc.
+                    if (chain == X) or (X == 'x'):
                         list2[idx] = ''
                     # If we have this, the subunit containing the contact is complementary.
                     elif (chain == 'A' and X == 'E') or (chain == 'B' and X == 'A') or (chain == 'C' and X == 'B') or (chain == 'D' and X == 'C') or (chain == 'E' and X == 'D'):
@@ -158,6 +160,12 @@ for target in [35]:
                 count = 0
                 break
 
+    # We always want Na+ as the final set of bars
+    nameList.append('Na+')
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        meanList[sim].append(np.mean(superData[sim]['Na+']))
+        serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+
     # Some plotting stuff
     width = 0.2
     x     = np.arange(len(nameList))
@@ -241,6 +249,12 @@ for target in [35]:
             if count == topNum:
                 count = 0
                 break
+
+    # We always want Na+ as the final set of bars
+    nameList.append('Na+')
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        meanList[sim].append(np.mean(superData[sim]['Na+']))
+        serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
 
     # Some plotting stuff
     width = 0.2
