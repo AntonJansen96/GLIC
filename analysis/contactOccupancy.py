@@ -3,6 +3,7 @@
 import os
 import MDAnalysis
 import multiprocessing as mp
+
 from science.utility import createIndexFile
 from science.utility import gromacs
 from science.utility import resname2triplet
@@ -18,7 +19,7 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
         xtc (string): path to .trr or .xtc file.
         target (string): MDAnalysis style selection string.
         ref (str, optional): MDAnalysis style selection string. Defaults to 'protein'.
-        outfile (str, optional): output file name. Defaults to target string.
+        outfile (str, optional): output file name. Defaults to 'target' string.
         cutoff (float, optional): contact cutoff distance in nm. Defaults to 0.40.
         idxA (str, optional): name of index file for 'ref' and 'target'. Defaults to 'select.ndx'.
         idxB (str, optional): name of index file for output of atoms within cutoff. Defaults to 'output.ndx'.
@@ -101,6 +102,9 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
 
     file.close()
 
+    # Prevent too many GROMACS backups (error) from being made.
+    os.system('rm {} {}'.format(idxA, idxB))
+
 
 if __name__ == "__main__":
 
@@ -128,6 +132,3 @@ if __name__ == "__main__":
     # RUN MULTITHREADED
     pool = mp.Pool(processes=mp.cpu_count())
     pool.starmap(task, items, chunksize=1)
-
-    # CLEANUP
-    os.system('rm -f contacts/*.ndx contacts/\\#*\\#')
