@@ -9,7 +9,7 @@ from science.utility import gromacs
 from science.utility import triplet2letter
 
 
-def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40, idxA='select.ndx', idxB='output.ndx', outputDir='contacts'):
+def doContactOccupancy(pdb, xtc, target, ref, outfile='', cutoff=0.40, idxA='select.ndx', idxB='output.ndx', outputDir='contacts'):
     """Performs contact occupancy analysis between and MDAnalysis-style selection
     called 'target' and a reference structure called 'ref'. Wraps gmx select.
     Final output is a list of most occupied contacts in descending order.
@@ -17,8 +17,8 @@ def doContactOccupancy(pdb, xtc, target, ref='protein', outfile='', cutoff=0.40,
     Args:
         pdb (string): path to .pdb or .gro file.
         xtc (string): path to .trr or .xtc file.
-        target (string): MDAnalysis style selection string.
-        ref (str, optional): MDAnalysis style selection string. Defaults to 'protein'.
+        target (str): MDAnalysis style selection string.
+        ref (str): MDAnalysis style selection string.
         outfile (str, optional): output file name. Defaults to 'target' string.
         cutoff (float, optional): contact cutoff distance in nm. Defaults to 0.40.
         idxA (str, optional): name of index file for 'ref' and 'target'. Defaults to 'select.ndx'.
@@ -120,14 +120,19 @@ if __name__ == "__main__":
     def task(resid, sim, rep, chain):
         pdb     = '../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
         xtc     = '../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
-        target  = 'resid {} and chainid {} and name OE1 OE2 OD1 OD2 NE2 ND1'.format(resid, chain)
+        target  = 'resid {} and chainID {} and name OE1 OE2 OD1 OD2 NE2 ND1'.format(resid, chain)
         outfile = '{}_{}_{}_{}.txt'.format(sim, rep, resid, chain)
+
+        # We use 'chainID A to E' and not 'protein' because MDAnalysis does NOT
+        # consider ASPT, GLUT, HSPT to be part of the protein. Furthermore, we
+        # exclude the target residue itself and we also include sodium atoms.
+        ref = '(chainID A to E and name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG and not resid {}) or (resname NA)'.format(resid)
 
         thread = mp.current_process().pid
         idxA   = 'select' + str(thread) + '.ndx'
         idxB   = 'output' + str(thread) + '.ndx'
 
-        doContactOccupancy(pdb, xtc, target, outfile=outfile, idxA=idxA, idxB=idxB, ref='protein or resname NA')
+        doContactOccupancy(pdb, xtc, target, ref, outfile=outfile, idxA=idxA, idxB=idxB)
 
     # PREPARE ITERABLES
     items = []
