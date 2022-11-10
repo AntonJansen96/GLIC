@@ -136,7 +136,7 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
 
     # Print our data structures to files for checking/debugging purposes.
     with open('contacts/{}.dat'.format(target), 'w') as file:
-        file.write('#      | 4HFI_4                    | 4HFI_7                     | 6ZGD_4                     | 6ZGD_4\n')
+        file.write('#      | 4HFI_4                    | 4HFI_7                     | 6ZGD_4                     | 6ZGD_7\n')
         file.write('# name | |pro| serr   |occ| serr   | |pro| serr   |occ|  serr   | |pro| serr   |occ|  serr   | |pro| serr   |occ|  serr\n')
         for name in superData['4HFI_4']:
             file.write('{:<6s} | {:.3f} {:.4f} {:.3f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f} | {:.3f} {:.4f} {:.4f} {:.4f}\n'.format(
@@ -272,10 +272,9 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
         serrList[sim].append(np.std(protoData[sim]) / np.sqrt(len(protoData[sim])))
 
     # Gather occupancy data:
-    count = 0
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-        for key in superData[inWhich]:
-
+        count = 0
+        for key in superData[sim]:
             # This if-statement makes sure we only get inter-subunit contacts.
             if key[-1] not in ['c', 'p']:
                 continue
@@ -283,7 +282,7 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
             if key == 'Na+':  # This is to prevent Na+ from showing up in the
                 continue      # middle of the bar plot if Na+ is in the top 5.
 
-            if sim == inWhich:
+            if sim == '4HFI_4':        # Don't duplicate entries in nameList.
                 nameList.append(key)
 
             meanList[sim].append(np.mean(superData[sim][key]))
@@ -291,7 +290,6 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
 
             count += 1
             if count == topNum:
-                count = 0
                 break
 
     # We always want Na+ as the final set of bars
