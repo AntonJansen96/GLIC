@@ -121,12 +121,11 @@ if __name__ == "__main__":
         pdb     = '../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
         xtc     = '../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
         target  = 'resid {} and chainID {} and name OE1 OE2 OD1 OD2 NE2 ND1'.format(resid, chain)
-        outfile = '{}_{}_{}_{}.txt'.format(sim, rep, resid, chain)
-
-        # We use 'chainID A to E' and not 'protein' because MDAnalysis does NOT
+        # We use 'chainID A B C D E' and not 'protein' because MDAnalysis does NOT
         # consider ASPT, GLUT, HSPT to be part of the protein. Furthermore, we
         # exclude the target residue itself and we also include sodium atoms.
-        ref = '(chainID A to E and name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG and not resid {}) or (resname NA)'.format(resid)
+        ref     = '(chainID A B C D E and name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG and not resid {}) or (resname NA)'.format(resid)
+        outfile = '{}_{}_{}_{}.txt'.format(sim, rep, resid, chain)
 
         thread = mp.current_process().pid
         idxA   = 'select' + str(thread) + '.ndx'
@@ -148,7 +147,15 @@ if __name__ == "__main__":
 
 # DEBUG
 # if __name__ == "__main__":
-#     pdb    = '../sims/6ZGD_7/01/CA.pdb'
-#     xtc    = '../sims/6ZGD_7/01/MD_conv.xtc'
-#     target = 'resid 35 and chainid D and name OE1 OE2 OD1 OD2 NE2 ND1'
-#     doContactOccupancy(pdb, xtc, target, ref='protein or resname NA')
+#     resid = 35
+#     sim   = '6ZGD_4'
+#     rep   = 1
+#     chain = 'D'
+
+#     pdb     = '../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
+#     xtc     = '../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
+#     target  = 'resid {} and chainid D and name OE1 OE2 OD1 OD2 NE2 ND1'.format(resid)
+#     ref     = '(chainID A B C D E and name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG and not resid {}) or (resname NA)'.format(resid)
+#     outfile = '{}_{}_{}_{}.txt'.format(sim, rep, resid, chain)
+
+#     doContactOccupancy(pdb, xtc, target, ref, outfile, outputDir='test')
