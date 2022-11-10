@@ -38,8 +38,8 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
                     X = list2[idx]
 
                     # If the contact is in the same chain, remove the letter.
-                    # The second conditional (chain = 'x') we add because 'x' is
-                    # the default chain for NA, CL, etc.
+                    # The second conditional (chain = 'x') we add because 'x'
+                    # is used as the 'default' chain for NA, CL, etc.
                     if (chain == X) or (X == 'x'):
                         list2[idx] = ''
                     # If we have this, the subunit containing the contact is complementary.
@@ -80,6 +80,37 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
             for key in superData[sims[ii]]:
                 if key not in superData[sims[jj]]:
                     superData[sims[jj]][key] = 20 * [0.0]
+
+    # Although the individual simulation dictionaries are sorted in descending
+    # order, this does not mean that OVERALL (over the four sims) this should be
+    # the order of the most occupied contact.
+
+    totalList = {}                      # First create a list of key:value pairs
+    for key in superData['4HFI_4']:     # where value is the sum of means of
+                                        # occupancies for said key.
+        total = 0
+        for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+            total += np.mean(superData[sim][key])
+
+        totalList[key] = float('{:.3f}'.format(total))
+
+    # Sort dictionary key:value pairs by value (descending):
+    totalList = dict(sorted(totalList.items(), key=lambda item: item[1], reverse=True))
+
+    # Now use this totalList to also sort superData accordingly:
+    # This is kind of hackish as I don't really understand lambdas in python
+    # but it works.
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+
+        temp1 = sorted(superData[sim].items(), key=lambda kv: totalList[kv[0]], reverse=True)
+        temp2 = {}
+
+        for tuple in temp1:
+            key        = tuple[0]
+            value      = tuple[1]
+            temp2[key] = value
+
+        superData[sim] = temp2
 
     # print(superData['4HFI_4'])
     # The SuperData data structure should now be completed.
@@ -150,6 +181,9 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     count = 0
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
         for key in superData[inWhich]:
+
+            if key == 'Na+':  # This is to prevent Na+ from showing up in the
+                continue      # middle of the bar plot if Na+ is in the top 5.
 
             if sim == inWhich:
                 nameList.append(key)
@@ -245,6 +279,9 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
             # This if-statement makes sure we only get inter-subunit contacts.
             if key[-1] not in ['c', 'p']:
                 continue
+
+            if key == 'Na+':  # This is to prevent Na+ from showing up in the
+                continue      # middle of the bar plot if Na+ is in the top 5.
 
             if sim == inWhich:
                 nameList.append(key)
