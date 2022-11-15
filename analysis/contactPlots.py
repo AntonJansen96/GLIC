@@ -14,8 +14,6 @@ from science.utility import triplet2letter
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
 
-# 145, 161, 185, 282 are bad (have fewer than 5 inter-subunit contacts)
-
 for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]:
 
     # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
@@ -164,7 +162,6 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     # Here we do the actual plotting of the bar graphs.
 
     topNum = 5              # Base the top 'topNum'
-    inWhich = '4HFI_4'      # contacts on sim 'inWhich'...
 
     # Initialize required data structures
     nameList = []
@@ -180,12 +177,12 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     # Gather occupancy data:
     count = 0
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-        for key in superData[inWhich]:
+        for key in superData[sim]:
 
             if key == 'Na+':  # This is to prevent Na+ from showing up in the
                 continue      # middle of the bar plot if Na+ is in the top 5.
 
-            if sim == inWhich:
+            if sim == '4HFI_4':
                 nameList.append(key)
 
             meanList[sim].append(np.mean(superData[sim][key]))
