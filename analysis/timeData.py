@@ -22,7 +22,7 @@ def task1(sim, rep, target, contact, chain1, chain2):
     """
     # Unique threads need a unique index file name
     thread = mp.current_process().pid
-    idxA   = outputDir + '/' + str(thread) + '.ndx'
+    idxA   = outputDir + '/' + 'select' + str(thread) + '.ndx'
 
     # Create index file
     sel0 = 'resid {} and chainID {} and name OE1 OE2 OD1 OD2 NE2 ND1'.format(target, chain1)
@@ -32,7 +32,7 @@ def task1(sim, rep, target, contact, chain1, chain2):
     # Run gxm mindist to get the .xvg file for these selections
     p1 = "../sims/{}/{:02d}/CA.pdb".format(sim, rep)
     p2 = "../sims/{}/{:02d}/MD_conv.xtc".format(sim, rep)
-    gromacs('mindist -s {} -f {} -n {} -od {}/{}_{}_{}_{}_{}.xvg'.format(p1, p2, idxA, outputDir, sim, rep, target, chain1, contact), stdin=[0, 1])
+    gromacs('mindist -s {} -f {} -n {} -od {}/{}_{}_{}{}_{}{}.xvg'.format(p1, p2, idxA, outputDir, sim, rep, target, chain1, contact, chain2), stdin=[0, 1])
 
     # Prevent too many GROMACS backups (error) from being made.
     os.system('rm {}'.format(idxA))
@@ -54,7 +54,7 @@ def task2(sim, rep, target, chain1):
     p1 = "../sims/{}/{:02d}/CA.pdb".format(sim, rep)
     p2 = "../sims/{}/{:02d}/MD_conv.xtc".format(sim, rep)
 
-    gromacs('mindist -s {} -f {} -n {} -od {}/{}_{}_{}_{}_NA.xvg'.format(p1, p2, idxA, outputDir, sim, rep, target, chain1), stdin=[0, 1])
+    gromacs('mindist -s {} -f {} -n {} -od {}/{}_{}_{}{}_NA.xvg'.format(p1, p2, idxA, outputDir, sim, rep, target, chain1), stdin=[0, 1])
 
     # Prevent too many GROMACS backups (error) from being made.
     os.system('rm {}'.format(idxA))
