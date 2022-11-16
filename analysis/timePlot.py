@@ -15,6 +15,23 @@ from science.utility import triplet2letter
 cutoff = 0.40  # contact distance cutoff (nm)
 protoC = 0.2   # protonation binning cutoff
 
+
+def calcLetter(letter, type):
+    N = ['A', 'B', 'C', 'D', 'E']
+    C = ['E', 'A', 'B', 'C', 'D']
+    P = ['B', 'C', 'D', 'E', 'A']
+
+    if type == 'c':
+        for idx in range(0, len(N)):
+            if letter == N[idx]:
+                return C[idx]
+
+    elif type == 'p':
+        for idx in range(0, len(N)):
+            if letter == N[idx]:
+                return P[idx]
+
+
 for target in [35]:
 
     # Put this in outer loop for speedup
@@ -73,18 +90,21 @@ for target in [35]:
 
                 for ii in range(0, len(topList)):
 
-                    if topList[ii] == 'Na+':
-                        fname = 'time/{}_{}_{}_{}_NA.xvg'.format(sim, rep, target, chain)
-                        print(fname)  # debug
+                    if topList[ii] == 'Na+':  # SODIUM
+                        fname = 'time/{}_{}_{}{}_NA.xvg'.format(sim, rep, target, chain)
 
-                    elif topList[ii][-1] in ['c', 'p']:
-                        fname = 'time/{}_{}_{}_{}_{}.xvg'.format(sim, rep, target, chain, int(topList[ii][1:-1]))
-                        print(fname)  # debug
+                    elif topList[ii][-1] == 'c':  # INTER-CHAIN CASE C
+                        xx = calcLetter(chain, type='c')
+                        fname = 'time/{}_{}_{}{}_{}{}.xvg'.format(sim, rep, target, chain, int(topList[ii][1:-1]), xx)
 
-                    else:
-                        fname = 'time/{}_{}_{}_{}_{}.xvg'.format(sim, rep, target, chain, int(topList[ii][1:]))
-                        print(fname)  # debug
+                    elif topList[ii][-1] == 'p':  # INTER-CHAIN CASE P
+                        xx = calcLetter(chain, type='p')
+                        fname = 'time/{}_{}_{}{}_{}{}.xvg'.format(sim, rep, target, chain, int(topList[ii][1:-1]), xx)
 
+                    else:  # SAME CHAIN
+                        fname = 'time/{}_{}_{}{}_{}{}.xvg'.format(sim, rep, target, chain, int(topList[ii][1:]), chain)
+
+                    print(fname)  # debug
                     D = loadxvg(fname=fname)
                     t = [val / 1000.0 for val in D[0]]  # ps -> ns
                     x = D[1]
