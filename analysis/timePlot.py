@@ -32,7 +32,7 @@ def calcLetter(letter, type):
                 return P[idx]
 
 
-for target in [35]:
+for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]:
 
     # Put this in outer loop for speedup
     lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
@@ -41,7 +41,7 @@ for target in [35]:
 
         #? IN THIS LOOP WE MAKE ONE SUPERPLOT
 
-        fig, axs = plt.subplots(nrows=5, ncols=4, figsize=(15, 11), dpi=400)
+        fig, axs = plt.subplots(nrows=5, ncols=4, figsize=(17, 11), dpi=400)
 
         sims = ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']
         for sim in sims:
