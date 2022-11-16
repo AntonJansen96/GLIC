@@ -1,32 +1,40 @@
 #!/bin/python3
 
-import matplotlib
+import MDAnalysis
 import matplotlib.pyplot as plt
 
 from science.parsing import loadxvg
 from science.parsing import loadCol
 from science.cphmd import getLambdaFileIndices
-from science.cphmd import protonation
+from science.utility import triplet2letter
 
 # Set global font size for figures.
-matplotlib.rcParams.update({'font.size': 14})
+# import matplotlib
+# matplotlib.rcParams.update({'font.size': 14})
 
 cutoff = 0.40  # contact distance cutoff (nm)
 protoC = 0.2   # protonation binning cutoff
 
 for target in [35]:
+
+    # Put this in outer loop for speedup
+    lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
+
     for rep in [1]:
 
-        #? IN THIS LOOP WE MAKE ONE PANEL
+        #? IN THIS LOOP WE MAKE ONE SUPERPLOT
 
-        for sim in ['6ZGD_7']:
+        fig, axs = plt.subplots(nrows=5, ncols=4, figsize=(15, 11), dpi=400)
 
-            lambdaIndices = getLambdaFileIndices('../sims/{}/{:02d}/CA.pdb'.format(sim, rep), target)
-            chain1 = ['A', 'B']
+        sims = ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']
+        for sim in sims:
 
+            chain1 = ['A', 'B', 'C', 'D', 'E']
             for chain in chain1:
 
-                #? IN THIS LOOP WE MAKE ONE PLOT
+                #? IN THIS LOOP WE MAKE ONE SUBPLOT
+
+                subplt = axs[chain1.index(chain), sims.index(sim)]
 
                 A = []  # This is for y-ticks (positions)
                 B = []  # This is for y-ticks (labels)
@@ -39,7 +47,6 @@ for target in [35]:
                 D = loadxvg('../sims/{}/{:02d}/cphmd-coord-{}.xvg'.format(sim, rep, lambdaIndex), dt=1000, b=0)
                 t = [val / 1000.0 for val in D[0]]  # ps -> ns
                 x = D[1]
-                print(protonation(x))  # debug
 
                 # Do the binning
                 for jj in range(0, len(x)):
@@ -48,7 +55,7 @@ for target in [35]:
                     else:
                         x[jj] = -1
 
-                plt.scatter(t, x, marker='|', linewidth=1.0)
+                subplt.scatter(t, x, marker='|', linewidth=1.0)
                 A.append(1)
                 B.append('proto')
 
@@ -85,19 +92,39 @@ for target in [35]:
                     # Do the binning
                     for jj in range(0, len(x)):
                         if x[jj] < cutoff:
-                            x[jj] = ii + 2
-                        else:
+                            x[jj] = ii + 2     # The first one should be one
+                        else:                  # higher than protonation.
                             x[jj] = -1
 
-                    plt.scatter(t, x, marker='|', linewidth=1.0)
+                    subplt.scatter(t, x, marker='|', linewidth=1.0)
                     A.append(ii + 2)
                     B.append(topList[ii])
 
-                plt.axis([0, 1000, 0, 8])
-                plt.xlabel('Time (ns)')
-                plt.yticks(A, B)
-                plt.title('{} in chain {}'.format(target, chain))
-                plt.tight_layout()
-                plt.savefig('time/{}_{}.png'.format(sim, chain))
-                plt.clf()
-                plt.close()
+                subplt.axis([0, 1000, 0, 8])
+                subplt.set_yticks(A, B)
+
+        #! Finish the panel
+
+        # Set outer xticks (top) (closed, pH 7, etc.)
+        simNames = ['closed, pH 7', 'closed, pH 4', 'open, pH 7', 'open, pH 4']
+        for jj in range(0, len(sims)):
+            axs[0, jj].set_title(simNames[jj], size=16, pad=10)
+
+        # Set outer xticks (bottom) (Time (ns))
+        for jj in range(0, len(sims)):
+            axs[4, jj].set_xlabel('Time (ns)', size=14)
+
+        # Set outer yticks (A, B, C, D, E)
+        for ii in range(0, len(chain1)):
+            axs[ii, 0].set_ylabel(chain1[ii], rotation=0, size=16, labelpad=20)
+
+        # Set the super title (get the restype letter as well)
+        u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
+        triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
+        letter = triplet2letter(triplet)
+        fig.suptitle('Residue {}{} (replica {})'.format(letter, target, rep), size=20, y=0.995)
+
+        # Save and clear
+        fig.tight_layout(pad=0.6)
+        fig.savefig('time/{}_{}.png'.format(target, rep))
+        fig.clf()
