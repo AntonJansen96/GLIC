@@ -31,6 +31,7 @@ def calcLetter(letter, type):
                 return P[idx]
 
 
+bins    = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1]
 chains  = ['A', 'B', 'C', 'D', 'E']
@@ -66,7 +67,7 @@ for target in targets:
     for key in sims:
         superData[key] = copy.deepcopy(C)
 
-    print(superData)
+    # print(superData)  # debug
 
     #? CONSTRUCT THE SUPERLAMBDA
     # (dict of sims of reps of chains of lists of coordinates)
@@ -81,6 +82,8 @@ for target in targets:
     for key in sims:
         superLambda[key] = copy.deepcopy(B)
 
+    # print (superLambda)  # debug
+
     #? GATHER ALL THE DATA INTO SUPERDATA AND SUPERLAMBDA
     for sim in sims:
         for rep in reps:
@@ -89,7 +92,7 @@ for target in targets:
                 #! Fill superLambda
                 fname = '../sims/{}/{:02d}/cphmd-coord-{}.xvg'.format(sim, rep, lambdaIndices[chains.index(chain)])
                 superLambda[sim][rep][chain] = loadxvg(fname, dt=1000)[1]
-                print(fname, chain)  # debug
+                print(fname, "(chain = {})".format(chain))  # debug
 
                 #! Fill superData
                 for name in topList:
@@ -107,7 +110,79 @@ for target in targets:
                     else:  # SAME CHAIN
                         fname = 'time/{}_{}_{}{}_{}{}.xvg'.format(sim, rep, target, chain, int(name[1:]), chain)
 
+                    superData[sim][rep][chain][name] = loadxvg(fname)[1]
                     print(fname)  # debug
 
-    #? DO THE BINNING ETC
-    
+    # print(superLambda)  # debug
+    # print(superData)    # debug
+
+    #? CONSTRUCT THE SUPERRESULT
+    # (dict of bins of topresidues of (empty) meanLists)
+    A = {}
+    for key in topList:
+        A[key] = []
+    superResult = {}
+    for key in bins:
+        superResult[key] = copy.deepcopy(A)
+
+    #? FILL THE SUPERRESULT
+    for bin in bins:
+        for name in topList:
+            for rep in reps:
+                for chain in chains:
+
+                    frameCount = 0  # Number of frames where we have the right protonation state.
+                    eventCount = 0  # Number of frames where we have, in addition, a contact.
+
+                    if bin == 'deproto_closed':
+                        for sim in ['6ZGD_4', '6ZGD_7']:  # If closed...
+                            for idx in range(0, 1001):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx > 0.8:  # If deprotonated...
+                                    frameCount += 1
+                                    if Dx < 0.4:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'proto_closed':
+                        for sim in ['6ZGD_4', '6ZGD_7']:  # If closed...
+                            for idx in range(0, 1001):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx < 0.2:  # If protonated...
+                                    frameCount += 1
+                                    if Dx < 0.4:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'deproto_open':
+                        for sim in ['4HFI_4', '4HFI_7']:  # If open...
+                            for idx in range(0, 1001):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx > 0.8:  # If deprotonated...
+                                    frameCount += 1
+                                    if Dx < 0.4:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'proto_open':
+                        for sim in ['4HFI_4', '4HFI_7']:  # If open...
+                            for idx in range(0, 1001):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx < 0.2:  # If protonated...
+                                    frameCount += 1
+                                    if Dx < 0.4:  # If within cutoff...
+                                        eventCount += 1
+
+                    if frameCount == 0:
+                        frac = 0
+                    else:
+                        frac = eventCount / float(frameCount)
+
+                    superResult[bin][name].append(frac)
+
+print(superResult)
