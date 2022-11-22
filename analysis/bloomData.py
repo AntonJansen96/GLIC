@@ -2,6 +2,8 @@
 
 import MDAnalysis as mda
 import numpy as np
+import multiprocessing as mp
+import os
 
 
 def doBlooming(sim, rep):
@@ -13,6 +15,10 @@ def doBlooming(sim, rep):
         y = c1[1] - c2[1]
         z = c1[2] - c2[2]
         return (x * x + y * y + z * z)**0.5
+
+    # Prepare directory stuff
+    if not os.path.exists('bloom'):
+        os.mkdir('bloom')
 
     # Get the correct pdb and xtc file.
     pdb = "../sims/{}/{:02d}/CA.pdb".format(sim, rep)
@@ -133,16 +139,28 @@ def doBlooming(sim, rep):
 
         #? END OF COPIED PART.
 
-    return superData
+    # Write everything to file(s).
+    chains = ['A', 'B', 'C', 'D', 'E']
+    for chain in chains:
+        with open('bloom/{}_{}_{}.txt'.format(sim, rep, chain), 'w') as file:
+            # Write header.
+            for metric in metrics:
+                file.write('{} '.format(metric))
+            file.write('\n')
+            # Write data.
+            for idx in range(0, len(superData['c_loop'][0])):
+                for metric in metrics:
+                    file.write('{:.4f} '.format(superData[metric][chains.index(chain)][idx]))
+                file.write('\n')
 
 
 if __name__ == "__main__":
+    # GATHER ITERABLES
+    items = []
+    for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
+        for rep in [1, 2, 3, 4]:
+            items.append((sim, rep))
 
-    # sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
-    # reps    = [1, 2, 3, 4]
-    sims    = ['4HFI_4']
-    reps    = [1]
-
-    for sim in sims:
-        for rep in reps:
-            doBlooming(sim, rep)
+    # RUN MULTITHREADED
+    pool = mp.Pool(processes=mp.cpu_count())
+    pool.starmap(doBlooming, items, chunksize=1)
