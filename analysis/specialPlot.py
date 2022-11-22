@@ -33,7 +33,7 @@ def calcLetter(letter, type):
 
 bins    = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
-reps    = [1]
+reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
 targets = [35]
 
@@ -82,7 +82,7 @@ for target in targets:
     for key in sims:
         superLambda[key] = copy.deepcopy(B)
 
-    # print (superLambda)  # debug
+    # print(superLambda)  # debug
 
     #? GATHER ALL THE DATA INTO SUPERDATA AND SUPERLAMBDA
     for sim in sims:
@@ -125,6 +125,8 @@ for target in targets:
     for key in bins:
         superResult[key] = copy.deepcopy(A)
 
+    # print(superResult)  # debug
+
     #? FILL THE SUPERRESULT
     for bin in bins:
         for name in topList:
@@ -134,48 +136,51 @@ for target in targets:
                     frameCount = 0  # Number of frames where we have the right protonation state.
                     eventCount = 0  # Number of frames where we have, in addition, a contact.
 
+                    # use 998 here instead of 1001 as not all simulations were
+                    # run until exactly 1000ns.
+
                     if bin == 'deproto_closed':
                         for sim in ['6ZGD_4', '6ZGD_7']:  # If closed...
-                            for idx in range(0, 1001):
+                            for idx in range(0, 998):
                                 Lx = superLambda[sim][rep][chain][idx]
                                 Dx   = superData[sim][rep][chain][name][idx]
 
-                                if Lx > 0.8:  # If deprotonated...
+                                if Lx > 1 - protoC:  # If deprotonated...
                                     frameCount += 1
-                                    if Dx < 0.4:  # If within cutoff...
+                                    if Dx < cutoff:  # If within cutoff...
                                         eventCount += 1
 
                     elif bin == 'proto_closed':
                         for sim in ['6ZGD_4', '6ZGD_7']:  # If closed...
-                            for idx in range(0, 1001):
+                            for idx in range(0, 998):
                                 Lx = superLambda[sim][rep][chain][idx]
                                 Dx   = superData[sim][rep][chain][name][idx]
 
-                                if Lx < 0.2:  # If protonated...
+                                if Lx < protoC:  # If protonated...
                                     frameCount += 1
-                                    if Dx < 0.4:  # If within cutoff...
+                                    if Dx < cutoff:  # If within cutoff...
                                         eventCount += 1
 
                     elif bin == 'deproto_open':
                         for sim in ['4HFI_4', '4HFI_7']:  # If open...
-                            for idx in range(0, 1001):
+                            for idx in range(0, 998):
                                 Lx = superLambda[sim][rep][chain][idx]
                                 Dx   = superData[sim][rep][chain][name][idx]
 
-                                if Lx > 0.8:  # If deprotonated...
+                                if Lx > 1 - protoC:  # If deprotonated...
                                     frameCount += 1
-                                    if Dx < 0.4:  # If within cutoff...
+                                    if Dx < cutoff:  # If within cutoff...
                                         eventCount += 1
 
                     elif bin == 'proto_open':
                         for sim in ['4HFI_4', '4HFI_7']:  # If open...
-                            for idx in range(0, 1001):
+                            for idx in range(0, 998):
                                 Lx = superLambda[sim][rep][chain][idx]
                                 Dx   = superData[sim][rep][chain][name][idx]
 
-                                if Lx < 0.2:  # If protonated...
+                                if Lx < protoC:  # If protonated...
                                     frameCount += 1
-                                    if Dx < 0.4:  # If within cutoff...
+                                    if Dx < cutoff:  # If within cutoff...
                                         eventCount += 1
 
                     if frameCount == 0:
