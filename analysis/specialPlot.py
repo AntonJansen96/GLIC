@@ -38,7 +38,6 @@ def stderr(array):
 cutoff  = 0.40  # contact distance cutoff (nm)
 protoC  = 0.2   # protonation binning cutoff
 
-bins    = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
@@ -126,6 +125,10 @@ for target in targets:
 
     # print(superLambda)  # debug
     # print(superData)    # debug
+
+    #! DO THE PH MIXING PART
+
+    bins = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
 
     #? CONSTRUCT THE SUPERRESULT
     # (dict of bins of topresidues of (empty) meanLists)
