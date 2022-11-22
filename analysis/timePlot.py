@@ -37,7 +37,7 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     # Put this in outer loop for speedup
     lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
 
-    for rep in [1]:
+    for rep in [1, 2, 3, 4]:
 
         #? IN THIS LOOP WE MAKE ONE SUPERPLOT
 
