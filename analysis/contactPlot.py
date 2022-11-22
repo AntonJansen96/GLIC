@@ -243,7 +243,7 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
     triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
     letter = triplet2letter(triplet)
-    plt.title('Residue {}{} (top {} contacts overall)'.format(letter, target, topNum))
+    plt.title('Residue {}{}'.format(letter, target))
 
     plt.ylim(0, 1.1)
     plt.ylabel('Protonation / contact occupancy')
@@ -336,7 +336,7 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
     plt.axvline(x=0.5, ymin=0, ymax=1.1, color='black', lw=2, linestyle=':')
 
     # Do the title
-    plt.title('Residue {}{} (top {} inter-subunit contacts)'.format(letter, target, topNum))
+    plt.title('Residue {}{}'.format(letter, target))
 
     plt.ylim(0, 1.1)
     plt.ylabel('Protonation / contact occupancy')
