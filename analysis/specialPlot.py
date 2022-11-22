@@ -1,18 +1,18 @@
 #!/bin/python3
 
 import matplotlib
+import matplotlib.pyplot as plt
 import copy
+import numpy as np
+import MDAnalysis
 
 from science.parsing import loadCol
 from science.parsing import loadxvg
 from science.cphmd import getLambdaFileIndices
-
+from science.utility import triplet2letter
 
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
-
-cutoff = 0.40  # contact distance cutoff (nm)
-protoC = 0.2   # protonation binning cutoff
 
 
 def calcLetter(letter, type):
@@ -31,18 +31,25 @@ def calcLetter(letter, type):
                 return P[idx]
 
 
+def stderr(array):
+    return np.std(array) / np.sqrt(len(array))
+
+
+cutoff  = 0.40  # contact distance cutoff (nm)
+protoC  = 0.2   # protonation binning cutoff
+
 bins    = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
-targets = [35]
+targets = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]
 
 for target in targets:
 
-    lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
+    #? GET LAMBDAINDICES AND TOPLIST
+    #? lambdaIndices are the same for all. topList contains the contact names.
 
-    #? CONSTRUCT THE SUPERDATA
-    # (dict of sims of reps of chains of topResidues of (mindist) lists)
+    lambdaIndices = getLambdaFileIndices('../sims/4HFI_4/01/CA.pdb', target)
 
     # Load the top 6 contacts for said residue from the contacts/target.dat file
     topList = loadCol('contacts/{}.dat'.format(target), col=1, header=1)[:6]
@@ -53,6 +60,9 @@ for target in targets:
     else:
         topList = topList[:5]
     topList.append('Na+')
+
+    #? CONSTRUCT THE SUPERDATA
+    #? (dict of sims of reps of chains of topResidues of (mindist) lists)
 
     A = {}
     for key in topList:
@@ -70,7 +80,7 @@ for target in targets:
     # print(superData)  # debug
 
     #? CONSTRUCT THE SUPERLAMBDA
-    # (dict of sims of reps of chains of lists of coordinates)
+    #? (dict of sims of reps of chains of lists of coordinates)
 
     A = {}
     for key in chains:
@@ -85,6 +95,7 @@ for target in targets:
     # print(superLambda)  # debug
 
     #? GATHER ALL THE DATA INTO SUPERDATA AND SUPERLAMBDA
+
     for sim in sims:
         for rep in reps:
             for chain in chains:
@@ -128,6 +139,7 @@ for target in targets:
     # print(superResult)  # debug
 
     #? FILL THE SUPERRESULT
+
     for bin in bins:
         for name in topList:
             for rep in reps:
@@ -190,4 +202,65 @@ for target in targets:
 
                     superResult[bin][name].append(frac)
 
-print(superResult)
+    #? MAKE THE BARPLOT
+
+    # Initialize required data structures
+    meanList = {}
+    serrList = {}
+    for key in bins:
+        meanList[key] = []
+        serrList[key] = []
+
+    # Fill required data structures
+    for bin in bins:
+        for name in topList:
+            meanList[bin].append(np.mean(superResult[bin][name]))
+            serrList[bin].append(stderr(superResult[bin][name]))
+
+    # print(meanList)  # debug
+
+    # Some plotting stuff
+    width = 0.2
+    x     = np.arange(len(topList))
+    fig   = plt.figure(figsize=(10, 6))
+    ax    = fig.add_subplot()
+
+    # deproto_closed
+    mean4 = meanList['deproto_closed']
+    serr4 = serrList['deproto_closed']
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='deproto_closed')
+    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # proto_closed
+    mean3 = meanList['proto_closed']
+    serr3 = serrList['proto_closed']
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='proto_closed')
+    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    # deproto_open
+    mean2 = meanList['deproto_open']
+    serr2 = serrList['deproto_open']
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='deproto_open', edgecolor='w', lw=1, hatch='//')
+    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # proto_open
+    mean1 = meanList['proto_open']
+    serr1 = serrList['proto_open']
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='proto_open', edgecolor='w', lw=1, hatch='\\\\')
+    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    ax.set_xticks(x, topList)
+    ax.legend(loc=1, prop={'size': 12})
+
+    # Do the title
+    u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
+    triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
+    letter = triplet2letter(triplet)
+    plt.title('Residue {}{}'.format(letter, target))
+
+    plt.ylim(0, 1.1)
+    plt.ylabel('Contact occupancy')
+    plt.tight_layout()
+    plt.savefig('test{}.png'.format(target))
+    plt.clf()
+    plt.close()
