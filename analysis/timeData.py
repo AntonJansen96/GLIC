@@ -66,7 +66,7 @@ items1 = []  # Holds tuples for regular contacts.
 items2 = []  # Holds tuples specifically for Na+.
 
 for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-    for rep in [1]:
+    for rep in [1, 2, 3, 4]:
         for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]:
 
             # Load the top 6 contacts for said residue from the contacts/target.dat file
