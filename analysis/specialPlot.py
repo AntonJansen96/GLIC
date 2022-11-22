@@ -228,25 +228,25 @@ for target in targets:
     # deproto_closed
     mean4 = meanList['deproto_closed']
     serr4 = serrList['deproto_closed']
-    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='deproto_closed')
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, deprotonated')
     ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
 
     # proto_closed
     mean3 = meanList['proto_closed']
     serr3 = serrList['proto_closed']
-    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='proto_closed')
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, protonated')
     ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
 
     # deproto_open
     mean2 = meanList['deproto_open']
     serr2 = serrList['deproto_open']
-    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='deproto_open', edgecolor='w', lw=1, hatch='//')
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, deprotonated', edgecolor='w', lw=1, hatch='//')
     ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
 
     # proto_open
     mean1 = meanList['proto_open']
     serr1 = serrList['proto_open']
-    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='proto_open', edgecolor='w', lw=1, hatch='\\\\')
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, protonated', edgecolor='w', lw=1, hatch='\\\\')
     ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
 
     ax.set_xticks(x, topList)
@@ -256,11 +256,152 @@ for target in targets:
     u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
     triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
     letter = triplet2letter(triplet)
-    plt.title('Residue {}{}'.format(letter, target))
+    plt.title('Residue {}{} (pH mixing)'.format(letter, target))
 
     plt.ylim(0, 1.1)
     plt.ylabel('Contact occupancy')
     plt.tight_layout()
-    plt.savefig('test{}.png'.format(target))
+    plt.savefig('contacts/{}_phmix.png'.format(target))
+    plt.clf()
+    plt.close()
+
+    #! NOW WE DO THE STRUCTURE MIXING PART
+
+    bins = ['deproto_ph7', 'proto_ph7', 'deproto_ph4', 'proto_ph4']
+
+    #? CONSTRUCT THE SUPERRESULT
+    # (dict of bins of topresidues of (empty) meanLists)
+    A = {}
+    for key in topList:
+        A[key] = []
+    superResult = {}
+    for key in bins:
+        superResult[key] = copy.deepcopy(A)
+
+    # print(superResult)  # debug
+
+    #? FILL THE SUPERRESULT
+
+    for bin in bins:
+        for name in topList:
+            for rep in reps:
+                for chain in chains:
+
+                    frameCount = 0  # Number of frames where we have the right protonation state.
+                    eventCount = 0  # Number of frames where we have, in addition, a contact.
+
+                    # use 998 here instead of 1001 as not all simulations were
+                    # run until exactly 1000ns.
+
+                    if bin == 'deproto_ph7':
+                        for sim in ['4HFI_7', '6ZGD_7']:  # If pH 7...
+                            for idx in range(0, 998):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx > 1 - protoC:  # If deprotonated...
+                                    frameCount += 1
+                                    if Dx < cutoff:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'proto_ph7':
+                        for sim in ['4HFI_7', '6ZGD_7']:  # If pH 7...
+                            for idx in range(0, 998):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx < protoC:  # If protonated...
+                                    frameCount += 1
+                                    if Dx < cutoff:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'deproto_ph4':
+                        for sim in ['4HFI_4', '6ZGD_4']:  # If pH 4...
+                            for idx in range(0, 998):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx > 1 - protoC:  # If deprotonated...
+                                    frameCount += 1
+                                    if Dx < cutoff:  # If within cutoff...
+                                        eventCount += 1
+
+                    elif bin == 'proto_ph4':
+                        for sim in ['4HFI_4', '6ZGD_4']:  # If pH 4...
+                            for idx in range(0, 998):
+                                Lx = superLambda[sim][rep][chain][idx]
+                                Dx   = superData[sim][rep][chain][name][idx]
+
+                                if Lx < protoC:  # If protonated...
+                                    frameCount += 1
+                                    if Dx < cutoff:  # If within cutoff...
+                                        eventCount += 1
+
+                    if frameCount == 0:
+                        frac = 0
+                    else:
+                        frac = eventCount / float(frameCount)
+                    superResult[bin][name].append(frac)
+
+    #? MAKE THE BARPLOT
+
+    # Initialize required data structures
+    meanList = {}
+    serrList = {}
+    for key in bins:
+        meanList[key] = []
+        serrList[key] = []
+
+    # Fill required data structures
+    for bin in bins:
+        for name in topList:
+            meanList[bin].append(np.mean(superResult[bin][name]))
+            serrList[bin].append(stderr(superResult[bin][name]))
+
+    # print(meanList)  # debug
+
+    # Some plotting stuff
+    width = 0.2
+    x     = np.arange(len(topList))
+    fig   = plt.figure(figsize=(10, 6))
+    ax    = fig.add_subplot()
+
+    # deproto_ph7
+    mean4 = meanList['deproto_ph7']
+    serr4 = serrList['deproto_ph7']
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='pH 7, deprotonated')
+    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # proto_ph7
+    mean3 = meanList['proto_ph7']
+    serr3 = serrList['proto_ph7']
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='pH 7, protonated')
+    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    # deproto_ph4
+    mean2 = meanList['deproto_ph4']
+    serr2 = serrList['deproto_ph4']
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='pH 4, deprotonated', edgecolor='w', lw=1, hatch='//')
+    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+
+    # proto_ph4
+    mean1 = meanList['proto_ph4']
+    serr1 = serrList['proto_ph4']
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='pH 4, protonated', edgecolor='w', lw=1, hatch='\\\\')
+    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+
+    ax.set_xticks(x, topList)
+    ax.legend(loc=1, prop={'size': 12})
+
+    # Do the title
+    # u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
+    # triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
+    # letter = triplet2letter(triplet)
+    plt.title('Residue {}{} (structure mixing)'.format(letter, target))
+
+    plt.ylim(0, 1.1)
+    plt.ylabel('Contact occupancy')
+    plt.tight_layout()
+    plt.savefig('contacts/{}_strucmix.png'.format(target))
     plt.clf()
     plt.close()
