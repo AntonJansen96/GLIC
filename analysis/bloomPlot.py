@@ -19,7 +19,7 @@ sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
 metrics = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
-fancy   = ['ECD twist', 'ECD spread', 'upper ECD spread', 'beta expansion', 'M1-M2 distance', 'M2 radius', 'M1 kink', 'M1 kink alter', '9\' distance', '9\' pore', '-2\' distance', '-2\' pore', 'loop C']
+fancy   = ['ECD twist', 'ECD spread', 'Upper ECD Spread', 'beta expansion', 'M1-M2 distance', 'M2 radius', 'M1 kink', 'M1 kink alter', '9\' distance', '9\' pore', '-2\' distance', '-2\' pore', 'loop C']
 
 superData = makeSuperDict([sims, reps, chains, metrics, []])
 superResult = makeSuperDict([sims, metrics, []])
@@ -111,18 +111,54 @@ def doPlot2(actual, xlabel, fname):
     """This function makes the histograms (left side of figure in Bergh21 paper).
     """
 
-    labelDict = {'4HFI_4': 'open, pH 4', '4HFI_7': 'open, pH 7', '6ZGD_4': 'closed, pH 4', '6ZGD_7': 'closed, pH 7'}
-
     plt.figure(figsize=(9, 6))
 
-    for sim in sims:
-        allData = []
+    for sim in ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']:
+        valuesList = []
         for rep in reps:
             for chain in chains:
-                allData += superData[sim][rep][chain][actual]
 
-        values, bins = np.histogram(allData, density=True, bins=1000)
-        plt.plot(bins[1:], values, label=labelDict[sim])
+                #! GET HISTOGRAM VALUES
+                x = superData[sim][rep][chain][actual]
+                values, bins = np.histogram(x, density=True, bins=20)
+                valuesList.append(values)
+
+        #! COMPUTE MEAN AND STANDARD ERROR
+        meanList  = len(values) * [0]  # 200, to hold mean for each bin
+        errorList = len(values) * [0]  # 200, to hold erro for each bin
+
+        for kk in range(0, len(values)):  # 200
+
+            # Create list of 20 values
+            temp = [0] * len(valuesList)  # 4*5=20
+            for ll in range(0, len(valuesList)):  # 4*5=20
+                temp[ll] = valuesList[ll][kk]
+
+            meanList[kk]  = np.mean(temp)
+            errorList[kk] = stderr(temp)
+
+        #! PLOT MEAN AND SHADED REGION (STANDARD ERROR)
+        A = []
+        B = []
+        for kk in range(0, len(meanList)):
+            A.append(meanList[kk] + errorList[kk])
+            B.append(meanList[kk] - errorList[kk])
+
+        if sim == '4HFI_4':
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
+            plt.fill_between(bins[1:], A, B, alpha=0.5, color='#9ebcda', hatch='\\\\', edgecolor='w', lw=1)
+
+        if sim == '4HFI_7':
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='open, pH 7', linestyle='--')
+            plt.fill_between(bins[1:], A, B, alpha=0.5, color='#8856a7', hatch='//',   edgecolor='w', lw=1)
+
+        if sim == '6ZGD_4':
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='closed, pH 4')
+            plt.fill_between(bins[1:], A, B, alpha=0.5, color='#9ebcda')
+
+        if sim == '6ZGD_7':
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='closed, pH 7')
+            plt.fill_between(bins[1:], A, B, alpha=0.5, color='#8856a7')
 
     plt.xlabel(xlabel, size=19)
     plt.ylabel('Occupancy', size=19)
@@ -138,14 +174,14 @@ doPlot1(['nine_prime_pore'],  [6,   7], '9\' Radius (Å)',        'fig2_right.pn
 doPlot1(['m2_m1_dist'],       [14, 18], 'M2-M1(-) Distance (Å)', 'fig3_right.png')  # good
 doPlot1(['beta_expansion'],   [14, 16], 'Beta Expansion (Å)',    'fig4_right.png')  # good
 doPlot1(['ecd_spread'],       [23, 26], 'ECD Spread (Å)',        'fig5_right.png')  # good
-doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD spread (Å)',  'fig6_right.png')  # good
+doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD Spread (Å)',  'fig6_right.png')  # good
 
-doPlot2('m2_radius',        'M2 Spread (Å)',         'fig1_left.png')
-doPlot2('nine_prime_pore',  '9\' Radius (Å)',        'fig2_left.png')
-doPlot2('m2_m1_dist',       'M2-M1(-) Distance (Å)', 'fig3_left.png')
-doPlot2('beta_expansion',   'Beta Expansion (Å)',    'fig4_left.png')
-doPlot2('ecd_spread',       'ECD Spread (Å)',        'fig5_left.png')
-doPlot2('ecd_upper_spread', 'Upper ECD spread (Å)',  'fig6_left.png')
+doPlot2('m2_radius',        'M2 Spread (Å)',         'fig1_left.png')  # good
+doPlot2('nine_prime_pore',  '9\' Radius (Å)',        'fig2_left.png')  # good
+doPlot2('m2_m1_dist',       'M2-M1(-) Distance (Å)', 'fig3_left.png')  # good
+doPlot2('beta_expansion',   'Beta Expansion (Å)',    'fig4_left.png')  # good
+doPlot2('ecd_spread',       'ECD Spread (Å)',        'fig5_left.png')  # good
+doPlot2('ecd_upper_spread', 'Upper ECD Spread (Å)',  'fig6_left.png')  # good
 
 #? Sanity check: this should be the same as the plot from the original script.
 # for chain in chains:
