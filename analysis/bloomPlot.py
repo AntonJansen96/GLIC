@@ -28,9 +28,9 @@ superResult = makeSuperDict([sims, metrics, []])
 for sim in sims:
     for rep in reps:
         for chain in chains:
-            fmetric = 'bloom/{}_{}_{}.txt'.format(sim, rep, chain)
+            fname = 'bloom/{}_{}_{}.txt'.format(sim, rep, chain)
             for idx in range(0, len(metrics)):
-                superData[sim][rep][chain][metrics[idx]] = loadCol(fmetric, idx + 1, header=0)
+                superData[sim][rep][chain][metrics[idx]] = loadCol(fname, idx + 1, header=0)
 
 # Get the results.
 for sim in sims:
@@ -114,12 +114,13 @@ def doPlot2(actual, xlabel, fname):
     plt.figure(figsize=(9, 6))
 
     for sim in ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']:
+        allData = []
         valuesList = []
         for rep in reps:
             for chain in chains:
-
                 #! GET HISTOGRAM VALUES
                 x = superData[sim][rep][chain][actual]
+                allData += x
                 values, bins = np.histogram(x, density=True, bins=20)
                 valuesList.append(values)
 
@@ -143,6 +144,11 @@ def doPlot2(actual, xlabel, fname):
         for kk in range(0, len(meanList)):
             A.append(meanList[kk] + errorList[kk])
             B.append(meanList[kk] - errorList[kk])
+
+        #* For some reason I don't fully understand, adding the following two
+        #* lines fixed my bug.
+        values, bins = np.histogram(allData, density=True, bins=20)
+        plt.hist(values, bins)
 
         if sim == '4HFI_4':
             plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
