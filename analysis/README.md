@@ -3,6 +3,16 @@
 * Requires presence of `data.py` and `data.pickle` (optional).
 * Makes the older histogram plots amongst other things. Still useful.
 
+`bloomData.py`
+* Associated with the directory `bloom`.
+* Performs Cathrine's ECD blooming motion analysis.
+* Multithreaded, requires around 45 seconds for all.
+
+`bloomPlot.py`
+* Associated with the directory `bloom`.
+* Requires prior running of `bloomData.py` as it needs the `bloom/xxx.txt` files.
+* Creates figures related to Cathrine's ECD blooming motion analysis.
+
 `contactData.py`
 * Associated with the directory `contacts`.
 * Performs systematic contact occupancy analysis.
