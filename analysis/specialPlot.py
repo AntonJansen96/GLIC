@@ -2,7 +2,6 @@
 
 import matplotlib
 import matplotlib.pyplot as plt
-import copy
 import numpy as np
 import MDAnalysis
 
@@ -10,6 +9,7 @@ from science.parsing import loadCol
 from science.parsing import loadxvg
 from science.cphmd import getLambdaFileIndices
 from science.utility import triplet2letter
+from science.utility import makeSuperDict
 
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 14})
@@ -60,38 +60,12 @@ for target in targets:
         topList = topList[:5]
     topList.append('Na+')
 
-    #? CONSTRUCT THE SUPERDATA
-    #? (dict of sims of reps of chains of topResidues of (mindist) lists)
+    #? INITIALIZE SUPERLAMBDA AND SUPERDATA
 
-    A = {}
-    for key in topList:
-        A[key] = []
-    B = {}
-    for key in chains:
-        B[key] = copy.deepcopy(A)
-    C = {}
-    for key in reps:
-        C[key] = copy.deepcopy(B)
-    superData = {}
-    for key in sims:
-        superData[key] = copy.deepcopy(C)
-
-    # print(superData)  # debug
-
-    #? CONSTRUCT THE SUPERLAMBDA
-    #? (dict of sims of reps of chains of lists of coordinates)
-
-    A = {}
-    for key in chains:
-        A[key] = []
-    B = {}
-    for key in reps:
-        B[key] = copy.deepcopy(A)
-    superLambda = {}
-    for key in sims:
-        superLambda[key] = copy.deepcopy(B)
-
+    superLambda = makeSuperDict([sims, reps, chains, []])
+    superData   = makeSuperDict([sims, reps, chains, topList, []])
     # print(superLambda)  # debug
+    # print(superData)    # debug
 
     #? GATHER ALL THE DATA INTO SUPERDATA AND SUPERLAMBDA
 
@@ -129,16 +103,7 @@ for target in targets:
     #! DO THE PH MIXING PART
 
     bins = ['deproto_closed', 'proto_closed', 'deproto_open', 'proto_open']
-
-    #? CONSTRUCT THE SUPERRESULT
-    # (dict of bins of topresidues of (empty) meanLists)
-    A = {}
-    for key in topList:
-        A[key] = []
-    superResult = {}
-    for key in bins:
-        superResult[key] = copy.deepcopy(A)
-
+    superResult = makeSuperDict([bins, topList, []])
     # print(superResult)  # debug
 
     #? FILL THE SUPERRESULT
@@ -271,16 +236,7 @@ for target in targets:
     #! NOW WE DO THE STRUCTURE MIXING PART
 
     bins = ['deproto_ph7', 'proto_ph7', 'deproto_ph4', 'proto_ph4']
-
-    #? CONSTRUCT THE SUPERRESULT
-    # (dict of bins of topresidues of (empty) meanLists)
-    A = {}
-    for key in topList:
-        A[key] = []
-    superResult = {}
-    for key in bins:
-        superResult[key] = copy.deepcopy(A)
-
+    superResult = makeSuperDict([bins, topList, []])
     # print(superResult)  # debug
 
     #? FILL THE SUPERRESULT
