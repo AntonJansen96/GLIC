@@ -25,6 +25,11 @@ def doBlooming(sim, rep):
     xtc = "../sims/{}/{:02d}/MD_conv.xtc".format(sim, rep)
     u   = mda.Universe(pdb, xtc)
 
+    # This is to get values for static structures. Normally commented out.
+    # pdb = "../sims/source/4HFI_clean_crystal.pdb"
+    # pdb = "../sims/source/6ZGD_clean_cryoEM.pdb"
+    # u  = mda.Universe(pdb)
+
     # Here we define the analysis metrics and data structure for our
     # resulting data. Each metric is a list of 5 lists. Each list holds
     # N-frames of values for a specific chain.
@@ -44,7 +49,13 @@ def doBlooming(sim, rep):
     for chain in ['A', 'B', 'C', 'D', 'E']:
         chains.append(u.select_atoms('chainID {} and name CA'.format(chain)))
 
+    # Normally commented out: this is to get only the last 500ns.
+    # frameCount = 0
     for _ in u.trajectory:
+
+        # frameCount += 1
+        # if frameCount > 500:
+            # continue
 
         #? THIS PART I COPIED FROM CATHRINES SCRIPT AND I DON'T FULLY
         #? UNDERSTAND EVERY ANALYSIS METRIC.
@@ -164,3 +175,7 @@ if __name__ == "__main__":
     # RUN MULTITHREADED
     pool = mp.Pool(processes=mp.cpu_count())
     pool.starmap(doBlooming, items, chunksize=1)
+
+# This is to get values for static structures. Normally commented out.
+# doBlooming('6ZGD', 0)
+# doBlooming('4HFI', 0)
