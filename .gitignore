@@ -1,16 +1,48 @@
-# ignore everything
-*
+# This file
+.gitignore
 
-# but not (certain) directories
-# !*/
-!/sims
-!/analysis/
-!/analysis/vmd
-!/analysis/rmsd
-!/analysis/chap
+# Simulation/GROMACS files
+*.xtc
+*.mdp
+*.itp
+*.pdb
+*.gro
+*.trr
+*.ndx
+*.cpt
+*.edr
+*.log
+*.out
+*.tpr
+*.top
+\#*
 
-# exceptions
-!*.sh
-!*.py
-!*.vmd
-!*.md
+# CHAP files
+*.obj
+*.mtl
+*.tcl
+*.json
+
+# Data files
+*.txt
+*.pickle
+*.dat
+*.xvg
+
+# Image files
+*.png
+*.pdf
+*.gif
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.tga
+
+# Special
+jobscript.sh
+job_multi.sh
+sims/source/charmm-gui*
+sims/old/*
+charmm36*
