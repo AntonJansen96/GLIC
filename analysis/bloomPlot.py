@@ -150,8 +150,8 @@ def doPlot2(actual, xlabel, fname):
         # in tern come from 4HFI_clean_crystal.pdb and 6ZGD_clean_cryoEM.pdb.
         # Margins in matplotlib are 1.05 * largest value = max(maxval).
         # This is to make sure that the vlines reach top of figure without rescaling.
-        static4HFI = {'ecd_twist': -11.631, 'ecd_spread': 23.796, 'ecd_upper_spread': 25.487, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'm2_radius': 21.583, 'm1_kink': 156.102, 'm1_kink_alt': 164.330, 'nine_prime_dist': 14.505, 'nine_prime_pore': 7.626, 'minus_two_prime_dist': 11.420, 'minus_two_prime_pore': 6.004, 'c_loop': 13.966}
-        static6ZGD = {'ecd_twist': -16.832, 'ecd_spread': 23.548, 'ecd_upper_spread': 24.948, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'm2_radius': 19.425, 'm1_kink': 157.222, 'm1_kink_alt': 160.535, 'nine_prime_dist': 11.360, 'nine_prime_pore': 5.973, 'minus_two_prime_dist': 11.200, 'minus_two_prime_pore': 5.888, 'c_loop': 14.378}
+        static4HFI = {'ecd_twist': -11.631, 'ecd_spread': 23.796, 'ecd_upper_spread': 25.487, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'm2_radius': 21.583, 'm1_kink': 156.102, 'm1_kink_alt': 164.330, 'nine_prime_dist': 5.075, 'nine_prime_pore': 7.626, 'minus_two_prime_dist': 11.420, 'minus_two_prime_pore': 6.004, 'c_loop': 13.966}
+        static6ZGD = {'ecd_twist': -16.832, 'ecd_spread': 23.548, 'ecd_upper_spread': 24.948, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'm2_radius': 19.425, 'm1_kink': 157.222, 'm1_kink_alt': 160.535, 'nine_prime_dist': 3.497, 'nine_prime_pore': 5.973, 'minus_two_prime_dist': 11.200, 'minus_two_prime_pore': 5.888, 'c_loop': 14.378}
 
         #* For some reason I don't fully understand, adding the following two
         #* lines fixed my bug.
@@ -191,14 +191,14 @@ def doPlot2(actual, xlabel, fname):
 
 
 doPlot1(['m2_radius'],        [19, 21], 'M2 Spread (Å)',         'fig1_right.png')  # good
-doPlot1(['nine_prime_pore'],  [6,   7], '9\' Radius (Å)',        'fig2_right.png')  # good
+doPlot1(['nine_prime_dist'],  [6,   7], '9\' Radius (Å)',        'fig2_right.png')  # fixed :)
 doPlot1(['m2_m1_dist'],       [14, 18], 'M2-M1(-) Distance (Å)', 'fig3_right.png')  # good
 doPlot1(['beta_expansion'],   [14, 16], 'Beta Expansion (Å)',    'fig4_right.png')  # good
-doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD Spread (Å)',  'fig5_right.png')
+doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD Spread (Å)',  'fig5_right.png')  # good
 doPlot1(['ecd_twist'],       [-19, -13], 'ECD Twist',            'fig6_right.png')  # good
 
 doPlot2('m2_radius',        'M2 Spread (Å)',         'fig1_left.png')  # good
-doPlot2('nine_prime_pore',  '9\' Radius (Å)',        'fig2_left.png')  # good
+doPlot2('nine_prime_dist',  '9\' Radius (Å)',        'fig2_left.png')  # fixed :)
 doPlot2('m2_m1_dist',       'M2-M1(-) Distance (Å)', 'fig3_left.png')  # good
 doPlot2('beta_expansion',   'Beta Expansion (Å)',    'fig4_left.png')  # good
 doPlot2('ecd_upper_spread', 'Upper ECD Spread (Å)',  'fig5_left.png')  # good

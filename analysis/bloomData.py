@@ -66,6 +66,8 @@ def doBlooming(sim, rep):
         nine_prime_COM      = CA.select_atoms("resid 233").center_of_mass()
         minus_two_prime_COM = CA.select_atoms("resid 222").center_of_mass()
 
+        ca_com = u.select_atoms('resid 233 and name CA').center_of_mass()  #! Used for corrected nine_prime_dist computation.
+
         for i in range(0, len(chains)):
             # Calculate ECD twist
             ECD_su_com = chains[i].select_atoms(ECD_resids).center_of_mass()
@@ -124,10 +126,23 @@ def doBlooming(sim, rep):
                 nine_prime2 = chains[i - 3].select_atoms("resid 233").center_of_mass()
             else:
                 nine_prime2 = chains[i + 2].select_atoms("resid 233").center_of_mass()
-            superData['nine_prime_dist'][i].append(dist(nine_prime1, nine_prime2))
+            # superData['nine_prime_dist'][i].append(dist(nine_prime1, nine_prime2))  #! Comments this out.
 
             # Alternative 9' calculation
             superData['nine_prime_pore'][i].append(dist(nine_prime1, nine_prime_COM))
+
+            #! Anton: This comes from Cathrine's new scripts and fixes my problem
+            #! with the nine_prime_dist metric (4HFI now gives 5.07 A, which is correct).
+            letters = ['A', 'B', 'C', 'D', 'E']
+            # Calculate -2' smallest distance
+            min_dist = 10000000
+            resid1 = u.select_atoms(f'protein and chainID {letters[i]} and resid 233')
+            for pos in resid1.positions:
+                distance = dist(pos, ca_com)
+                if distance < min_dist:
+                    min_dist = distance
+            superData['nine_prime_dist'][i].append(min_dist)
+            #! End of modification.
 
             # Calculate -2' distance
             minus_two_prime1 = chains[i].select_atoms("resid 222").center_of_mass()
