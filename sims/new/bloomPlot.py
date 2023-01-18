@@ -156,7 +156,7 @@ def doPlot2(actual, xlabel, fname):
         #* For some reason I don't fully understand, adding the following two
         #* lines fixed my bug.
         values, bins = np.histogram(allData, density=True, bins=20)
-        plt.hist(values, bins)
+        plt.hist(values, bins, alpha=0.00)
 
         if sim == '4HFI_4':
             plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
@@ -191,7 +191,7 @@ def doPlot2(actual, xlabel, fname):
 
 
 doPlot1(['m2_radius'],        [19, 21], 'M2 Spread (Å)',         'fig1_right.png')  # good
-doPlot1(['nine_prime_dist'],  [6,   7], '9\' Radius (Å)',        'fig2_right.png')  # fixed :)
+doPlot1(['nine_prime_dist'],  [2.5, 3.75], '9\' Radius (Å)',     'fig2_right.png')  # fixed :)
 doPlot1(['m2_m1_dist'],       [14, 18], 'M2-M1(-) Distance (Å)', 'fig3_right.png')  # good
 doPlot1(['beta_expansion'],   [14, 16], 'Beta Expansion (Å)',    'fig4_right.png')  # good
 doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD Spread (Å)',  'fig5_right.png')  # good
