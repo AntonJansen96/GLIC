@@ -195,14 +195,14 @@ doPlot1(['nine_prime_dist'],  [2.5, 3.75], '9\' Radius (Å)',     'fig2_right.pn
 doPlot1(['m2_m1_dist'],       [14, 18], 'M2-M1(-) Distance (Å)', 'fig3_right.png')  # good
 doPlot1(['beta_expansion'],   [14, 16], 'Beta Expansion (Å)',    'fig4_right.png')  # good
 doPlot1(['ecd_upper_spread'], [25, 28], 'Upper ECD Spread (Å)',  'fig5_right.png')  # good
-doPlot1(['ecd_twist'],       [-19, -13], 'ECD Twist',            'fig6_right.png')  # good
+doPlot1(['ecd_twist'],       [-19, -13], 'ECD Twist (degrees)',  'fig6_right.png')  # good
 
 doPlot2('m2_radius',        'M2 Spread (Å)',         'fig1_left.png')  # good
 doPlot2('nine_prime_dist',  '9\' Radius (Å)',        'fig2_left.png')  # fixed :)
 doPlot2('m2_m1_dist',       'M2-M1(-) Distance (Å)', 'fig3_left.png')  # good
 doPlot2('beta_expansion',   'Beta Expansion (Å)',    'fig4_left.png')  # good
 doPlot2('ecd_upper_spread', 'Upper ECD Spread (Å)',  'fig5_left.png')  # good
-doPlot2('ecd_twist',        'ECD Twist',             'fig6_left.png')  # good
+doPlot2('ecd_twist',        'ECD Twist (degrees)',   'fig6_left.png')  # good
 
 #? Sanity check: this should be the same as the plot from the original script.
 # for chain in chains:
