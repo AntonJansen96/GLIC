@@ -13,6 +13,11 @@
 * Requires prior running of `bloomData.py` as it needs the `bloom/xxx.txt` files.
 * Creates figures related to Cathrine's ECD blooming motion analysis.
 
+`contactBreakdown.py`
+* Associated with the directory `backbone`.
+* Breaks down which specific atoms in a residue-target contact are involved.
+* This is helpful for finding out whether it's a BB or SC contact.
+
 `contactData.py`
 * Associated with the directory `contacts`.
 * Performs systematic contact occupancy analysis.
