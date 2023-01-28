@@ -6,7 +6,7 @@ import numpy as np
 import MDAnalysis
 
 from science.cphmd import getLambdaFileIndices
-from science.cphmd import protonation
+from science.cphmd import protonation, deprotonation
 from science.parsing import loadCol
 from science.parsing import loadxvg
 from science.utility import triplet2letter
@@ -125,7 +125,15 @@ for target in [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 1
             for idx in lambdaIndices:
 
                 x = loadxvg('../sims/{}/{:02d}/cphmd-coord-{}.xvg'.format(sim, rep, idx), dt=1000, b=0)[1]
-                protoData[sim].append(protonation(x))
+
+                # Anton: this is a bug fix. We should use the first out of three
+                # lambda_coordinates for HSPT as the first corresponds to single
+                # vs double protonated (see .mdp), however it is also reversed
+                # because of multistate! so use deprotonation instead:
+                if target in [127, 235, 277]:
+                    protoData[sim].append(deprotonation(x))
+                else:
+                    protoData[sim].append(protonation(x))
 
     # print(protoData)
     # The protoData data structure should now be completed.
