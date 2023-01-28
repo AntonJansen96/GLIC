@@ -47,48 +47,48 @@ if __name__ == "__main__":
         names = list(u.select_atoms(temp).names)
         # print(names)  # debug
 
-        # #! Task for multithreading.
-        # def task(p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1IDX, chain2IDX, name):
-        #     createIndexFile(p1, indexFileName, [sel1, sel2])
+        #! Task for multithreading.
+        def task(p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1IDX, chain2IDX, name):
+            createIndexFile(p1, indexFileName, [sel1, sel2])
 
-        #     # Loop over each replica and run GROMACS mindist
-        #     for rep in reps:
-        #         p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
-        #         xvgFileName = f'backbone/{sim}_{rep}_{fullResidueName}_{fullTargetName}_{chain1IDX}{chain2IDX}_{name}.xvg'
-        #         gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
+            # Loop over each replica and run GROMACS mindist
+            for rep in reps:
+                p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
+                xvgFileName = f'backbone/{sim}_{rep}_{fullResidueName}_{fullTargetName}_{chain1IDX}{chain2IDX}_{name}.xvg'
+                gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
 
-        # #! Gather iterables.
-        # items = []
+        #! Gather iterables.
+        items = []
 
-        # for sim in sims:
+        for sim in sims:
 
-        #     for idx in range(0, len(chain1)):
+            for idx in range(0, len(chain1)):
 
-        #         # Get MDAnalysis-style selection of residue (E35) carboxyl-oxygens in a specific chain.
-        #         sel1 = f'resid {residue} and chainID {chain1[idx]} and name OE1 OE2 OD1 OD2 NE2 ND1'
+                # Get MDAnalysis-style selection of residue (E35) carboxyl-oxygens in a specific chain.
+                sel1 = f'resid {residue} and chainID {chain1[idx]} and name OE1 OE2 OD1 OD2 NE2 ND1'
 
-        #         for name in names:
-        #             sel2 = f'resid {target} and chainID {chain2[idx]} and name {name}'
-        #             # print(f'{sel1} WITH {sel2}')  # debug
+                for name in names:
+                    sel2 = f'resid {target} and chainID {chain2[idx]} and name {name}'
+                    # print(f'{sel1} WITH {sel2}')  # debug
 
-        #             # Make the index file (we only need one per four replicas)
-        #             p1 = f'../sims/{sim}/01/CA.pdb'
-        #             indexFileName = f'backbone/{sim}_{fullResidueName}_{fullTargetName}_{chain1[idx]}{chain2[idx]}_{name}.ndx'
+                    # Make the index file (we only need one per four replicas)
+                    p1 = f'../sims/{sim}/01/CA.pdb'
+                    indexFileName = f'backbone/{sim}_{fullResidueName}_{fullTargetName}_{chain1[idx]}{chain2[idx]}_{name}.ndx'
 
-        #             # THIS BLOCK OF CODE WE COMMENT OUT AS WE WANT TO MULTITHREAD IT ####
-        #             # createIndexFile(p1, indexFileName, [sel1, sel2])
-        #             # # Loop over each replica and run GROMACS mindist
-        #             # for rep in reps:
-        #             #     p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
-        #             #     xvgFileName = f'backbone/{sim}_{rep}_{fullResidueName}_{fullTargetName}_{chain1[idx]}{chain2[idx]}_{name}.xvg'
-        #             #     gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
-        #             # END OF BLOCK OF CODE WE COMMENT OUT AS WE WANT TO MULTITHREAD IT ####
+                    # THIS BLOCK OF CODE WE COMMENT OUT AS WE WANT TO MULTITHREAD IT ####
+                    # createIndexFile(p1, indexFileName, [sel1, sel2])
+                    # # Loop over each replica and run GROMACS mindist
+                    # for rep in reps:
+                    #     p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
+                    #     xvgFileName = f'backbone/{sim}_{rep}_{fullResidueName}_{fullTargetName}_{chain1[idx]}{chain2[idx]}_{name}.xvg'
+                    #     gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
+                    # END OF BLOCK OF CODE WE COMMENT OUT AS WE WANT TO MULTITHREAD IT ####
 
-        #             items.append((p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1[idx], chain2[idx], name))
+                    items.append((p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1[idx], chain2[idx], name))
 
-        # #! Run multithreaded.
-        # pool = mp.Pool(processes=mp.cpu_count())
-        # pool.starmap(task, items, chunksize=1)
+        #! Run multithreaded.
+        pool = mp.Pool(processes=mp.cpu_count())
+        pool.starmap(task, items, chunksize=1)
 
         #? Gather data and process.
         superData = makeSuperDict([sims, names, 0])
