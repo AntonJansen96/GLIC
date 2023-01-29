@@ -43,6 +43,10 @@
 * Helper file for identiying what kind of selections MDAnalysis makes.
 * This was used to do some debugging for `contactData.py`.
 
+`paperBarPlots.py`
+* Creates a global protonation plot as well as custom contact bar plots for the paper.
+* Requires prior running of `contactData.py` as it needs the `contacts/xxx` files.
+
 `specialPlot.py`
 * Associated with the directory `contacts`.
 * Requires prior running of `timeData.py` as it needs the `time/xxx.xvg` files.
