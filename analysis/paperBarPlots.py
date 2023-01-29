@@ -17,7 +17,8 @@ matplotlib.rcParams.update({'font.size': 20})
 letters  = ['D', 'E', 'E', 'D', 'D', 'E', 'D', 'D', 'E', 'E', 'E', 'E', 'D', 'D', 'D', 'D', 'E', 'D', 'D', 'H', 'D', 'D', 'E', 'D', 'D', 'D', 'E', 'E', 'D', 'E', 'D', 'E', 'H', 'E', 'E', 'H', 'E']
 residues = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]
 
-ecd      = [26, 67, 69, 75, 82, 86, 88, 104, 13, 14, 49, 55, 91, 97, 127, 136, 145, 147, 153, 154, 163, 177, 178, 181, 185]
+resolved = [243, 32, 235, 222, 277, 69, 88, 127, 181, 185]
+ecd      = sorted([26, 67, 69, 75, 82, 86, 88, 104, 13, 14, 49, 55, 91, 97, 127, 136, 145, 147, 153, 154, 163, 177, 178, 181, 185])
 ecdtmd   = [31, 32, 35, 115, 161, 122, 243]
 tmd      = [222, 235, 272, 277, 282]
 
@@ -59,87 +60,126 @@ for sim in sims:
 
 #? We have now processed the data. Now it's time to template the multiplot.
 
-data  = residues
-nrows = 3
+for case in ['all', 'all_resolved', 'ecd', 'ecdtmd', 'tmd']:
+    filterResolved = False
 
-# Initialize multifigure object.
-ncols    = int(np.ceil(len(data) / nrows))
-fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(20, 11), dpi=100)
+    if case == 'all_resolved':
+        filterResolved = True
+        outname = 'allprotoresolved.png'
+        data    = residues
+        nrows   = 3
+        size    = (20, 11)
 
-row = 0
-col = 0
-for idx in range(0, len(data)):
+    if case == 'all':
+        outname = 'allproto.png'
+        data    = residues
+        nrows   = 3
+        size    = (20, 11)
 
-    # Select subplt object.
-    subplt = axs[row, col]
+    if case == 'ecd':
+        outname = "ecdproto.png"
+        data    = ecd
+        nrows   = 2
+        size    = (20, 7.2)
 
-    # General plotting stuff.
-    width = 0.2
-    x = np.arange(len([1]))
+    if case == 'ecdtmd':
+        outname = "ecdtmdproto.png"
+        data    = ecdtmd
+        nrows   = 1
+        size    = (10.77, 3.66)
 
-    # 6ZGD_7
-    mean4 = [protoMean['6ZGD_7'][residues[idx]]]
-    serr4 = [protoErr['6ZGD_7'][residues[idx]]]
-    subplt.bar(     x - width * 1.5, mean4, width, color='#8856a7')
-    subplt.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+    if case == 'tmd':
+        outname = "tmdproto.png"
+        data    = tmd
+        nrows   = 1
+        size    = (7.70, 3.66)
 
-    # 6ZGD_4
-    mean3 = [protoMean['6ZGD_4'][residues[idx]]]
-    serr3 = [protoErr['6ZGD_4'][residues[idx]]]
-    subplt.bar(     x - width / 2.0, mean3, width, color='#9ebcda')
-    subplt.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+    # Initialize multifigure object.
+    ncols    = int(np.ceil(len(data) / nrows))
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=size, dpi=200)
 
-    # 4HFI_7
-    mean2 = [protoMean['4HFI_7'][residues[idx]]]
-    serr2 = [protoErr['4HFI_7'][residues[idx]]]
-    subplt.bar(     x + width / 2.0, mean2, width, color='#8856a7', edgecolor='w', lw=1, hatch='//')
-    subplt.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+    row = 0
+    col = 0
+    for idx in range(0, len(data)):
+        
+        if nrows > 1:               # Select subplt object.
+            subplt = axs[row, col]
+        else:
+            subplt = axs[col]
 
-    # 4HFI_4
-    mean1 = [protoMean['4HFI_4'][residues[idx]]]
-    serr1 = [protoErr['4HFI_4'][residues[idx]]]
-    subplt.bar(     x + width * 1.5, mean1, width, color='#9ebcda', edgecolor='w', lw=1, hatch='\\\\')
-    subplt.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+        width = 0.2                 # General plotting stuff for bar plots.
+        x = np.arange(len([1]))
 
-    # Disable x-ticks and set x-label.
-    subplt.set_xticks([])
-    subplt.set_xlabel(f'{letters[idx]}{residues[idx]}')
+        mean4 = [protoMean['6ZGD_7'][data[idx]]]    # 6ZGD_7
+        serr4 = [protoErr['6ZGD_7'][data[idx]]]
 
-    # Set y-lim.
-    subplt.set_ylim([0, 1.1])
+        mean3 = [protoMean['6ZGD_4'][data[idx]]]    # 6ZGD_4
+        serr3 = [protoErr['6ZGD_4'][data[idx]]]
 
-    # Remove boxes around plots.
-    subplt.spines['top'].set_visible(False)
-    subplt.spines['right'].set_visible(False)
-    subplt.spines['bottom'].set_visible(False)
-    subplt.spines['left'].set_visible(False)
+        if (data[idx] in resolved) or (not filterResolved):
+            subplt.bar(     x - width * 1.5, mean4, width, color='#8856a7')  # 6ZGD_7
+            subplt.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
 
-    # If we're not in the first column, do not show the yticks.
-    # Else, do show them.
-    if col != 0:
-        subplt.set_yticks([])
-    else:
-        subplt.set_ylabel('Protonation')
-        subplt.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+            subplt.bar(     x - width / 2.0, mean3, width, color='#9ebcda')  # 6ZGD_4
+            subplt.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+        else:
+            subplt.bar(x - width * 1.5, mean4, width, color='#8856a7', alpha=0.0)  # 6ZGD_7
+            subplt.bar(x - width / 2.0, mean3, width, color='#9ebcda', alpha=0.0)  # 6ZGD_4
 
-    # This is simply for the rows and columns.
-    col += 1
-    if col == ncols:
-        col = 0
-        row += 1
+        mean2 = [protoMean['4HFI_7'][data[idx]]]    # 4HFI_7
+        serr2 = [protoErr['4HFI_7'][data[idx]]]
+        subplt.bar(     x + width / 2.0, mean2, width, color='#8856a7', edgecolor='w', lw=1, hatch='//')
+        subplt.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
 
-# Remove the last two empty boxes in third row.
-axs[2, 11].axis('off')
-axs[2, 12].axis('off')
+        mean1 = [protoMean['4HFI_4'][data[idx]]]    # 4HFI_4
+        serr1 = [protoErr['4HFI_4'][data[idx]]]
+        subplt.bar(     x + width * 1.5, mean1, width, color='#9ebcda', edgecolor='w', lw=1, hatch='\\\\')
+        subplt.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
 
-# Proxy artist for legend
-subplt.bar(0, 0, 0, color='#8856a7', label='closed, pH 7')
-subplt.bar(0, 0, 0, color='#9ebcda', label='closed, pH 4')
-subplt.bar(0, 0, 0, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
-subplt.bar(0, 0, 0, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
+        # Disable x-ticks and set x-label.
+        subplt.set_xticks([])
+        letter = letters[residues.index(data[idx])]
+        subplt.set_xlabel(f'{letter}{data[idx]}')
 
-fig.legend(loc=[0.85, 0.06], prop={'size': 21})
-fig.tight_layout()
-fig.savefig('allproto.png')
-os.system('convert allproto.png -trim allproto.png')
-fig.clf()
+        # Set y-lim.
+        subplt.set_ylim([0, 1.1])
+
+        # Remove boxes around plots.
+        subplt.spines['top'].set_visible(False)
+        subplt.spines['right'].set_visible(False)
+        subplt.spines['bottom'].set_visible(False)
+        subplt.spines['left'].set_visible(False)
+
+        # If we're not in the first column, do not show the yticks.
+        if col != 0:
+            subplt.set_yticks([])
+        else:
+            subplt.set_ylabel('Protonation')
+            subplt.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+
+        # This is simply for the rows and columns.
+        col += 1
+        if col == ncols:
+            col = 0
+            row += 1
+
+    # Remove the last two empty boxes in third row.
+    if case in ['all', 'all_resolved']:
+        axs[2, 11].axis('off')
+        axs[2, 12].axis('off')
+    elif case == 'ecd':
+        axs[1, 12].axis('off')
+
+    # Proxy artist for legend
+    subplt.bar(0, 0, 0, color='#8856a7', label='closed, pH 7')
+    subplt.bar(0, 0, 0, color='#9ebcda', label='closed, pH 4')
+    subplt.bar(0, 0, 0, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
+    subplt.bar(0, 0, 0, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
+
+    if case in ['all', 'all_resolved']:
+        fig.legend(loc=[0.85, 0.06], prop={'size': 20})
+
+    fig.tight_layout()
+    fig.savefig(outname)
+    os.system(f'convert {outname} -trim {outname}')
+    fig.clf()
