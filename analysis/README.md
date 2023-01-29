@@ -29,6 +29,11 @@
 * Requires prior running of `contactData.py` as it needs the `contacts/xxx` files.
 * BUG: protonation columns for HSPT (in the plots) are not correct.
 
+`custom.py`
+* Associated with the directory `contacts`.
+* Creates barplots with customly selected partners (for paper).
+* Requires prior running of `contactData.py` as it needs the `contacts/xxx` files.
+
 `data.pickle`
 * Holds some data structures for speedup. Used by `analyze.py`.
 
