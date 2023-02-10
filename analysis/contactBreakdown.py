@@ -15,7 +15,22 @@ matplotlib.rcParams.update({'font.size': 18})
 
 if __name__ == "__main__":
 
-    for comb in [['E35', 'T158c'], ['E243', 'K248']]:
+    # array = [
+    #     ['E26', 'V79p'],
+    #     ['E26', 'N80p'],
+    #     ['E26', 'V81p'],
+    #     ['E177', 'R179'],
+    #     ['E177', 'K148c'],
+    #     ['D178', 'E177'],
+    #     ['E181', 'R179'],
+    #     ['E181', 'R133'],
+    #     ['D185', 'I128'],
+    #     ['E243', 'N200c'],
+    #     ['E243', 'N245c']
+    # ]
+    array = [['D185', 'K183']]
+
+    for comb in array:
 
         # Some name variables
         fullResidueName = comb[0]           # E35

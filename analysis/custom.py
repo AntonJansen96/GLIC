@@ -13,10 +13,77 @@ from science.utility import triplet2letter
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 20})
 
-target   = 35
-protoBar = True
-include  = ['T158c', 'Na+']
-legend   = True
+# target   = 26
+# protoBar = True
+# include  = ['V79p', 'N80p', 'V81p']
+# legend   = True
+
+# target   = 75
+# protoBar = True
+# include  = ['R133', 'V90c']
+# legend   = True
+
+# target   = 82
+# protoBar = True
+# include  = ['K38c', 'T36']
+# legend   = True
+
+# target   = 104
+# protoBar = True
+# include  = ['R85']
+# legend   = True
+
+# target   = 136
+# protoBar = True
+# include  = ['T137', 'R138', 'R179']
+# legend   = True
+
+# LOOP C
+
+# target   = 177
+# protoBar = True
+# include  = ['R179', 'K148c']
+# legend   = True
+
+# target   = 178
+# protoBar = True
+# include  = ['E177', 'K148c']
+# legend   = True
+
+# target   = 181
+# protoBar = True
+# include  = ['R133', 'R179']
+# legend   = True
+
+# target   = 185
+# protoBar = True
+# include  = ['K183', 'I128']
+# legend   = True
+
+# target   = 32
+# protoBar = True
+# include  = ['R192', 'Y119']
+# legend   = True
+
+# target   = 35
+# protoBar = True
+# include  = ['L114', 'T158c', 'Na+']
+# legend   = True
+
+# target   = 122
+# protoBar = True
+# include  = ['R118', 'S123', 'D115', 'Q124', 'Y119']
+# legend   = True
+
+# target   = 243
+# protoBar = True
+# include  = ['K248', 'N200c']
+# legend   = True
+
+# target   = 222
+# protoBar = True
+# include  = ['Na+']
+# legend   = True
 
 # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
 # Each of these dictionaries contains the following key-value pairs:
