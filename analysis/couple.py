@@ -14,6 +14,9 @@ from science.parsing import loadCol
 # Set global font size for figures.
 matplotlib.rcParams.update({'font.size': 20})
 
+def stderr(array):
+    return np.std(array) / np.sqrt(len(array))
+
 # PARAMETERS.
 
 sims      = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
@@ -161,27 +164,45 @@ for comb in [['E243', 'K248']]:
 
     #? Load+process the data for the full trajectories from bloom.
 
-    metrics = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
-    fullData = makeSuperDict([sims, metrics, []])
+    metrics    = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
+    fullData   = makeSuperDict([sims, reps, chains1, metrics, []])
+    fullResult = makeSuperDict([sims, metrics, []])
 
+    # Load the data.
     for sim in sims:
         for rep in reps:
-            for chain in ['A', 'B', 'C', 'D', 'E']:
+            for chain in chains1:
                 fname = f'bloom/{sim}_{rep}_{chain}.txt'
                 for idx in range(0, len(metrics)):
-                    fullData[sim][metrics[idx]].append(np.mean(loadCol(fname, idx + 1, header=0)))
+                    fullData[sim][rep][chain][metrics[idx]] = loadCol(fname, idx + 1, header=0)
+
+    # Get the results.
+    for sim in sims:
+        for metric in metrics:
+            for rep in reps:
+                for chain in chains1:
+                    fullResult[sim][metric].append(np.mean(fullData[sim][rep][chain][metric]))
 
     #? Load+process the data filtered for the contact.
 
-    metrics      = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
-    filteredData = makeSuperDict([sims, metrics, []])
+    metrics        = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
+    filteredData   = makeSuperDict([sims, reps, chains1, metrics, []])
+    filteredResult = makeSuperDict([sims, metrics, []])
 
+    # Load the data.
     for sim in sims:
         for rep in reps:
             for ii in range(0, len(chains1)):
                 fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[ii]}_{chains2[ii]}.dat'
                 for idx in range(0, len(metrics)):
-                    filteredData[sim][metrics[idx]].append(np.mean(loadCol(fname, idx + 1, header=0)))
+                        filteredData[sim][rep][chains1[ii]][metrics[idx]] = loadCol(fname, idx + 1, header=0)
+
+    # Get the results.
+    for sim in sims:
+        for metric in metrics:
+            for rep in reps:
+                for chain in chains1:
+                    filteredResult[sim][metric].append(np.mean(filteredData[sim][rep][chain][metric]))
 
     #? Make BARPLOTS, comparing the two sets.
 
@@ -194,10 +215,10 @@ for comb in [['E243', 'K248']]:
         meanList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
         serrList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
         for sim in sims:
-            meanList[sim].append(np.mean(fullData[sim][metric]))
-            serrList[sim].append(np.std(fullData[sim][metric]) / np.sqrt(len(fullData[sim][metric])))
-            meanList[sim].append(np.mean(filteredData[sim][metric]))
-            serrList[sim].append(np.std(filteredData[sim][metric] / np.sqrt(len(filteredData[sim][metric]))))
+            meanList[sim].append(np.mean(fullResult[sim][metric]))
+            serrList[sim].append(stderr(fullResult[sim][metric]))
+            meanList[sim].append(np.mean(filteredResult[sim][metric]))
+            serrList[sim].append(stderr(filteredResult[sim][metric]))
 
         fig = plt.figure(figsize=(8, 6))
         ax  = fig.add_subplot()
@@ -248,7 +269,8 @@ for comb in [['E243', 'K248']]:
             plt.ylim(2.5, 4)
 
         plt.legend()
-        plt.tight_layout()
-        plt.savefig(f'{residue}_{target}_{metric}.png')
+        outname = f'{residue}_{target}_{metric}.png'
+        plt.savefig(outname)
+        os.system(f'convert {outname} -trim {outname}')
         plt.clf()
         plt.close()
