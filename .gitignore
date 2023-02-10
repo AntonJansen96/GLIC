@@ -46,3 +46,5 @@ job_multi.sh
 sims/source/charmm-gui*
 sims/old/*
 charmm36*
+*.lock
+*.npz
