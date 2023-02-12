@@ -26,7 +26,8 @@ chains1   = ['A', 'B', 'C', 'D', 'E']
 carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
 polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
 
-for comb in [['E243', 'K248']]:
+# for comb in [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]:
+for comb in [['E26', 'V79p']]:
 
     # PROCESS NAMES.
     fullResidueName = comb[0]           # E35
@@ -202,7 +203,12 @@ for comb in [['E243', 'K248']]:
         for metric in metrics:
             for rep in reps:
                 for chain in chains1:
-                    filteredResult[sim][metric].append(np.mean(filteredData[sim][rep][chain][metric]))
+                    # If a file is empty this will results in a np.mean being
+                    # taken over an empty list, which will results in a np.NAN
+                    # being returned. We need to remove these before we proceed.
+                    array = filteredData[sim][rep][chain][metric]
+                    if len(array) > 0:
+                        filteredResult[sim][metric].append(np.mean(array))
 
     #? Make BARPLOTS, comparing the two sets.
 
@@ -322,6 +328,11 @@ for comb in [['E243', 'K248']]:
                             x = filteredData[sim][rep][chain][metric]
 
                         hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
+
+                        # Another bug fix to prevent nan from np.mean([])
+                        if 'nan' in [str(val) for val in hist]:
+                            continue
+
                         histList.append(hist)
 
                 # Compute mean and standard error.
