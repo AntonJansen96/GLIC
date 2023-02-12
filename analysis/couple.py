@@ -275,99 +275,114 @@ for comb in [['E243', 'K248']]:
         plt.clf()
         plt.close()
 
-    #? Make HISTOGRAMS, comparing the two sets.
+    #? Make HISTOGRAMS, comparing the two sets (All vs contact).
 
     for metric in metrics:
 
         # Define metric-specific stuff
 
         if metric == 'ecd_twist':
-            histRange = (-30, -5)
+            histRange = (-25, -5)
             xlabel = 'ECD Twist (degrees)'
 
         if metric == 'beta_expansion':
-            histRange = (15, 22)
+            histRange = (12, 18)
             xlabel = 'Beta Expansion (Å)'
 
         if metric == 'm2_m1_dist':
-            histRange = (9, 16)
+            histRange = (9, 21)
             xlabel = 'M2-M1(-) Distance (Å)'
 
         if metric == 'nine_prime_dist':
-            histRange = (2, 5)
+            histRange = (2, 5.5)
             xlabel = '9\' Radius (Å)'
 
         # Start building the figure
 
-        plt.figure(figsize=(9, 6))
-        maxval = []
+        fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
 
-        for sim in sims:
+        for idx in [0, 1]:
 
-            # Each figure contains four curves (one for each sim).
+            maxval = []
+            subplt = axs[idx]
 
-            histList = []
+            for sim in sims:
 
-            for rep in reps:
-                for chain in chains1:
+                # Each figure contains four curves (one for each sim).
 
-                    # Get histogram values and corresponding bin_edges
-                    x = filteredData[sim][rep][chain][metric]
-                    hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
-                    histList.append(hist)
+                histList = []
 
-            # Compute mean and standard error.
-            meanList = len(hist) * [0]
-            errorList = len(hist) * [0]
+                for rep in reps:
+                    for chain in chains1:
 
-            for kk in range(0, len(hist)):
+                        # Get histogram values and corresponding bin_edges
+                        if idx == 0:
+                            x = fullData[sim][rep][chain][metric]
+                        if idx == 1:
+                            x = filteredData[sim][rep][chain][metric]
 
-                # Create list of 20 values
-                temp = [0] * len(histList)  # 4*5=20
-                for ll in range(0, len(histList)):  # 4*5=20
-                    temp[ll] = histList[ll][kk]
+                        hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
+                        histList.append(hist)
 
-                meanList[kk]  = np.mean(temp)
-                errorList[kk] = stderr(temp)
+                # Compute mean and standard error.
+                meanList = len(hist) * [0]
+                errorList = len(hist) * [0]
 
-            # Plot mean and shaded region (standard error).
-            A = []
-            B = []
-            for kk in range(0, len(meanList)):
-                A.append(meanList[kk] + errorList[kk])
-                B.append(meanList[kk] - errorList[kk])
+                for kk in range(0, len(hist)):
 
-            # The values in these dictionaries come from bloom/static.txt, which
-            # in tern come from 4HFI_clean_crystal.pdb and 6ZGD_clean_cryoEM.pdb.
-            # Margins in matplotlib are 1.05 * largest value = max(maxval).
-            # This is to make sure that the vlines reach top of figure without rescaling.
-            static4HFI = {'ecd_twist': -11.631, 'ecd_spread': 23.796, 'ecd_upper_spread': 25.487, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'm2_radius': 21.583, 'm1_kink': 156.102, 'm1_kink_alt': 164.330, 'nine_prime_dist': 5.075, 'nine_prime_pore': 7.626, 'minus_two_prime_dist': 11.420, 'minus_two_prime_pore': 6.004, 'c_loop': 13.966}
-            static6ZGD = {'ecd_twist': -16.832, 'ecd_spread': 23.548, 'ecd_upper_spread': 24.948, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'm2_radius': 19.425, 'm1_kink': 157.222, 'm1_kink_alt': 160.535, 'nine_prime_dist': 3.497, 'nine_prime_pore': 5.973, 'minus_two_prime_dist': 11.200, 'minus_two_prime_pore': 5.888, 'c_loop': 14.378}
+                    # Create list of 20 values
+                    temp = [0] * len(histList)  # 4*5=20
+                    for ll in range(0, len(histList)):  # 4*5=20
+                        temp[ll] = histList[ll][kk]
 
-            if sim == '4HFI_4':
-                plt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
-                plt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#9ebcda', hatch='\\\\', edgecolor='w', lw=1)
+                    meanList[kk]  = np.mean(temp)
+                    errorList[kk] = stderr(temp)
 
-            if sim == '4HFI_7':
-                plt.vlines(x=static4HFI[metric], ymin=0, ymax=10, color='black', label='open, crystal', linestyle='--')
-                plt.plot(bin_edges[1:], meanList, linewidth=2,   color='#8856a7', label='open, pH 7', linestyle='--')
-                plt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#8856a7', hatch='//',   edgecolor='w', lw=1)
+                # Plot mean and shaded region (standard error).
+                A = []
+                B = []
+                for kk in range(0, len(meanList)):
+                    A.append(meanList[kk] + errorList[kk])
+                    B.append(meanList[kk] - errorList[kk])
 
-            if sim == '6ZGD_4':
-                plt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='closed, pH 4')
-                plt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#9ebcda')
+                # The values in these dictionaries come from bloom/static.txt, which
+                # in tern come from 4HFI_clean_crystal.pdb and 6ZGD_clean_cryoEM.pdb.
+                # Margins in matplotlib are 1.05 * largest value = max(maxval).
+                # This is to make sure that the vlines reach top of figure without rescaling.
+                static4HFI = {'ecd_twist': -11.631, 'ecd_spread': 23.796, 'ecd_upper_spread': 25.487, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'm2_radius': 21.583, 'm1_kink': 156.102, 'm1_kink_alt': 164.330, 'nine_prime_dist': 5.075, 'nine_prime_pore': 7.626, 'minus_two_prime_dist': 11.420, 'minus_two_prime_pore': 6.004, 'c_loop': 13.966}
+                static6ZGD = {'ecd_twist': -16.832, 'ecd_spread': 23.548, 'ecd_upper_spread': 24.948, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'm2_radius': 19.425, 'm1_kink': 157.222, 'm1_kink_alt': 160.535, 'nine_prime_dist': 3.497, 'nine_prime_pore': 5.973, 'minus_two_prime_dist': 11.200, 'minus_two_prime_pore': 5.888, 'c_loop': 14.378}
 
-            if sim == '6ZGD_7':
-                plt.vlines(x=static6ZGD[metric], ymin=0, ymax=10, color='black', label='closed, cryoEM')
-                plt.plot(bin_edges[1:], meanList, linewidth=2,   color='#8856a7', label='closed, pH 7')
-                plt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#8856a7')
+                if sim == '4HFI_4':
+                    subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
+                    subplt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#9ebcda', hatch='\\\\', edgecolor='w', lw=1)
 
-            maxval.append(max(A))
+                if sim == '4HFI_7':
+                    subplt.vlines(x=static4HFI[metric], ymin=0, ymax=10, color='black', label='open, crystal', linestyle='--')
+                    subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#8856a7', label='open, pH 7', linestyle='--')
+                    subplt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#8856a7', hatch='//',   edgecolor='w', lw=1)
 
-        plt.ylim(0, max(maxval) * 1.05)
+                if sim == '6ZGD_4':
+                    subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='closed, pH 4')
+                    subplt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#9ebcda')
 
-        plt.xlabel(xlabel)
-        # plt.legend(loc='best')
+                if sim == '6ZGD_7':
+                    subplt.vlines(x=static6ZGD[metric], ymin=0, ymax=10, color='black', label='closed, cryoEM')
+                    subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#8856a7', label='closed, pH 7')
+                    subplt.fill_between(bin_edges[1:], A, B, alpha=0.5, color='#8856a7')
+
+                maxval.append(max(A))
+
+            subplt.set_ylim(0, max(maxval) * 1.05)
+            subplt.set_xlim(histRange)
+
+            if idx == 0:
+                subplt.set_ylabel('All')
+                subplt.legend(loc='best', prop={'size': 14})
+
+            if idx == 1:
+                subplt.set_ylabel(f'{fullResidueName}-{fullTargetName}')
+                subplt.set_xlabel(xlabel)
+
         outname = f'couple/{residue}_{target}_{metric}_hist.png'
         plt.tight_layout()
         plt.savefig(outname)
