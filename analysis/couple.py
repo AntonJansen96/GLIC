@@ -78,7 +78,7 @@ for comb in [['E26', 'V79p']]:
     #! BLOOM DATA GENERATION PART ##############################################
 
     # TASK
-    def doBlooming(sim, rep, residue, target, chains1, chains2):
+    def doBlooming(sim, rep, residue, target, chain1, chain2):
 
         def dist(c1, c2) -> float:
             x = c1[0] - c2[0]
@@ -86,7 +86,7 @@ for comb in [['E26', 'V79p']]:
             z = c1[2] - c2[2]
             return (x * x + y * y + z * z)**0.5
 
-        fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[0]}_{chains2[0]}.dat'
+        fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat'
         if not os.path.exists(fname):
 
             p1 = f'../sims/{sim}/{rep:02d}/CA.pdb'
@@ -98,7 +98,7 @@ for comb in [['E26', 'V79p']]:
                 metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
                 superData = makeSuperDict([metrics, []])
 
-                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[ii]}_{chains2[ii]}.txt'
+                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt'
                 contactFrameIndices = [int(val) for val in loadCol(fname)]
 
                 for jj in contactFrameIndices:
@@ -106,10 +106,10 @@ for comb in [['E26', 'V79p']]:
 
                     # *** ecd_twist ***
 
-                    ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chains1[ii]}").center_of_mass()
+                    ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
                     ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
                     TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
-                    TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chains1[ii]}").center_of_mass()
+                    TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
                     ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
                     ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
                     ecd_twist_universe.atoms.positions = ecd_twist_coords
@@ -117,20 +117,20 @@ for comb in [['E26', 'V79p']]:
 
                     # *** beta_expansion ***
 
-                    beta_com1 = u.select_atoms(f"protein and chainID {chains1[ii]} and name CA and resid  30:34 ").center_of_mass()
-                    beta_com2 = u.select_atoms(f"protein and chainID {chains1[ii]} and name CA and resid 190:194").center_of_mass()
+                    beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
+                    beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
                     superData['beta_expansion'].append(dist(beta_com1, beta_com2))
 
                     # *** m2_m1_dist ***
 
-                    m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chains1[ii]}").center_of_mass()
-                    m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chains2[ii]}").center_of_mass()
+                    m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
+                    m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chain2}").center_of_mass()
                     superData['m2_m1_dist'].append(dist(m1_com, m2_com))
 
                     # *** nine_prime_dist ***
 
                     min_dist = 10000000
-                    resid1 = u.select_atoms(f'protein and resid 233 and chainID {chains1[ii]}')
+                    resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
                     ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
                     for pos in resid1.positions:
                         distance = dist(pos, ca_com)
@@ -140,7 +140,7 @@ for comb in [['E26', 'V79p']]:
 
                     # *** Anton: come up with your own metric for loop-C here, e.g. RMSD ***
 
-                with open(f'couple/{residue}_{target}_{sim}_{rep}_{chains1[ii]}_{chains2[ii]}.dat', 'w') as file:
+                with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat', 'w') as file:
                     # Write header.
                     for metric in metrics:
                         file.write('{} '.format(metric))
@@ -155,7 +155,8 @@ for comb in [['E26', 'V79p']]:
     items = []
     for sim in sims:
         for rep in reps:
-            items.append((sim, rep, residue, target, chains1, chains2))
+            for idx in range(0, len(chains1)):
+                items.append((sim, rep, residue, target, chains1[idx], chains2[idx]))
 
     # RUN MULTITHREADED
     pool = mp.Pool(processes=mp.cpu_count())
