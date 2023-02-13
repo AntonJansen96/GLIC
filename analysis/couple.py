@@ -2,6 +2,7 @@
 
 import MDAnalysis
 from MDAnalysis.analysis.distances import distance_array
+import MDAnalysis.analysis.rms
 import multiprocessing as mp
 import os
 import numpy as np
@@ -22,12 +23,14 @@ def stderr(array):
 sims      = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps      = [1, 2, 3, 4]
 chains1   = ['A', 'B', 'C', 'D', 'E']
+# metrics   = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
+metrics   = ['m2_m1_dist']
 
 carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
 polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
 
-for comb in [['E243', 'K248'], ['E243', 'N200c']]:
 # for comb in [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]:
+for comb in [['E243', 'K248'], ['E243', 'N200c']]:
 
     # PROCESS NAMES.
     fullResidueName = comb[0]           # E35
@@ -93,57 +96,70 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
             p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
             u  = MDAnalysis.Universe(p1, p2)
 
-            metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
             superData = makeSuperDict([metrics, []])
 
             fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt'
             contactFrameIndices = [int(val) for val in loadCol(fname)]
 
-            for jj in contactFrameIndices:
-                u.trajectory[jj]
+            for ts in u.trajectory:
+
+            # for jj in contactFrameIndices:
+                # u.trajectory[jj]
 
                 # *** ecd_twist ***
-
-                ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
-                ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
-                TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
-                TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
-                ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
-                ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
-                ecd_twist_universe.atoms.positions = ecd_twist_coords
-                superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
+                if 'ecd_twist' in metrics:
+                    ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
+                    ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
+                    TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
+                    TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
+                    ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
+                    ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
+                    ecd_twist_universe.atoms.positions = ecd_twist_coords
+                    superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
 
                 # *** beta_expansion ***
-
-                beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
-                beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
-                superData['beta_expansion'].append(dist(beta_com1, beta_com2))
+                if 'beta_expansion' in metrics:
+                    beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
+                    beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
+                    superData['beta_expansion'].append(dist(beta_com1, beta_com2))
 
                 # *** m2_m1_dist ***
-
-                #? Cathrine defines the M2-M1(-) distance as the distance between
-                #? M2 in chain B with M1 in chain A (i.e. M2(i+1) with M1(i) ).
-                #? Furthermore, In VMD we observe that E243, K248 are in M2 in
-                #? chain B while N200c is in M1 in chain A.
-                #? Therefore: [E243](i)-[xxx][x] -> M2(i) - M1(i-1) or:
-                #? [E243](i+1)-[xxx][x] -> M2(i+1) - M1(i).
-                chainMap = {'A': 'E', 'B': 'A', 'C': 'B', 'D': 'C', 'E': 'D'}
-                m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
-                m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chainMap[chain1]}").center_of_mass()
-                superData['m2_m1_dist'].append(dist(m1_com, m2_com))
+                if 'm2_m1_dist' in metrics:
+                    #? Cathrine defines the M2-M1(-) distance as the distance between
+                    #? M2 in chain B with M1 in chain A (i.e. M2(i+1) with M1(i) ).
+                    #? Furthermore, In VMD we observe that E243, K248 are in M2 in
+                    #? chain B while N200c is in M1 in chain A.
+                    #? Therefore: [E243](i)-[xxx][x] -> M2(i) - M1(i-1) or:
+                    #? [E243](i+1)-[xxx][x] -> M2(i+1) - M1(i).
+                    chainMap = {'A': 'E', 'B': 'A', 'C': 'B', 'D': 'C', 'E': 'D'}
+                    m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
+                    m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chainMap[chain1]}").center_of_mass()
+                    superData['m2_m1_dist'].append(dist(m1_com, m2_com))
 
                 # *** nine_prime_dist ***
-
-                min_dist = 10000000
-                resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
-                ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
-                for pos in resid1.positions:
-                    distance = dist(pos, ca_com)
-                    if distance < min_dist:
-                        min_dist = distance
-                superData['nine_prime_dist'].append(min_dist)
+                if 'nine_prime_dist' in metrics:
+                    min_dist = 10000000
+                    resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
+                    ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
+                    for pos in resid1.positions:
+                        distance = dist(pos, ca_com)
+                        if distance < min_dist:
+                            min_dist = distance
+                    superData['nine_prime_dist'].append(min_dist)
 
                 # *** Anton: come up with your own metric for loop-C here, e.g. RMSD ***
+                if 'loopc' in metrics:
+                    pass
+                # Possibly minimum distance?
+                # loopC_com = u.select_atoms(f"protein and resid 172:184 and name CA and chainID {chain1}").center_of_mass()
+                # prote_com = u.select_atoms(f"protein and resid xxx and name CA and chainID {chain1}").center_of_mass()
+                # superData['loopc'].append(dist(loopC_com, prote_com))
+
+                # RMSD?
+                # R = MDAnalysis.analysis.rms.RMSD(u, select=f'protein and resid 172:184 and name CA and chainID {chain1}')
+                # R.run(start=jj, stop=jj)
+                # val = R.rmsd.T[2]
+                # superData['loopc'].append(dist(val))
 
             with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat', 'w') as file:
                 # Write header.
@@ -151,7 +167,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
                     file.write('{} '.format(metric))
                 file.write('\n')
                 # Write data.
-                for kk in range(0, len(superData['nine_prime_dist'])):
+                for kk in range(0, len(superData[metrics[0]])):
                     for metric in metrics:
                         file.write('{:.4f} '.format(superData[metric][kk]))
                     file.write('\n')
@@ -171,28 +187,27 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
 
     #? Load+process the data for the full trajectories from bloom.
 
-    metrics    = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
-    fullData   = makeSuperDict([sims, reps, chains1, metrics, []])
-    fullResult = makeSuperDict([sims, metrics, []])
+    allmetrics = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
+    fullData   = makeSuperDict([sims, reps, chains1, allmetrics, []])
+    fullResult = makeSuperDict([sims, allmetrics, []])
 
     # Load the data.
     for sim in sims:
         for rep in reps:
             for chain in chains1:
                 fname = f'bloom/{sim}_{rep}_{chain}.txt'
-                for idx in range(0, len(metrics)):
-                    fullData[sim][rep][chain][metrics[idx]] = loadCol(fname, idx + 1, header=0)
+                for idx in range(0, len(allmetrics)):
+                    fullData[sim][rep][chain][allmetrics[idx]] = loadCol(fname, idx + 1, header=0)
 
     # Get the results.
     for sim in sims:
-        for metric in metrics:
+        for metric in allmetrics:
             for rep in reps:
                 for chain in chains1:
                     fullResult[sim][metric].append(np.mean(fullData[sim][rep][chain][metric]))
 
     #? Load+process the data filtered for the contact.
 
-    metrics        = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
     filteredData   = makeSuperDict([sims, reps, chains1, metrics, []])
     filteredResult = makeSuperDict([sims, metrics, []])
 
@@ -262,8 +277,6 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
         ax.set_xticks(x, nameList)
         ax.legend(loc=1, prop={'size': 12})
 
-        ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
-
         if metric == 'ecd_twist':
             plt.ylabel('ECD Twist (degrees)')
             plt.ylim(-12.5, -19)
@@ -274,11 +287,15 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
 
         if metric == 'm2_m1_dist':
             plt.ylabel('M2-M1(-) Distance (Å)')
-            plt.ylim(10, 18)
+            plt.ylim(11, 20)
 
         if metric == 'nine_prime_dist':
             plt.ylabel('9\' Radius (Å)')
             plt.ylim(2.5, 4)
+
+        if metric == 'loopc':
+            plt.ylabel('loop-C (Å)')
+            plt.ylim(0, 50)
 
         plt.legend()
         outname = f'couple/{residue}_{target}_{metric}.png'
@@ -309,6 +326,10 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
             histRange = (2, 5.5)
             xlabel = '9\' Radius (Å)'
 
+        if metric == 'loopc':
+            histRange(0, 50)
+            xlabel = 'loop-C (Å)'
+
         # Start building the figure
 
         fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(8, 8))
@@ -333,7 +354,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
                         if idx == 1:
                             x = filteredData[sim][rep][chain][metric]
 
-                        hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
+                        hist, bin_edges = np.histogram(x, density=True, bins=50, range=histRange)
 
                         # Another bug fix to prevent nan from np.mean([])
                         if 'nan' in [str(val) for val in hist]:
