@@ -1,229 +1,77 @@
 #!/usr/bin/env python3
 
-import MDAnalysis
-from MDAnalysis.analysis.distances import distance_array
-import MDAnalysis.analysis.rms
-import multiprocessing as mp
-import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import os
 
 from science.utility import makeSuperDict
 from science.parsing import loadCol
 
-# Set global font size for figures.
-matplotlib.rcParams.update({'font.size': 20})
+combs   = [['E243', 'K248'], ['E243', 'N200c']]
+sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
+reps    = [1, 2, 3, 4]
+chains  = ['A', 'B', 'C', 'D', 'E']
+metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
 
 def stderr(array):
     return np.std(array) / np.sqrt(len(array))
 
-# PARAMETERS.
+matplotlib.rcParams.update({'font.size': 20})
 
-sims      = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
-reps      = [1, 2, 3, 4]
-chains1   = ['A', 'B', 'C', 'D', 'E']
-# metrics   = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
-metrics   = ['m2_m1_dist']
+for comb in combs:
 
-carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
-polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
+    # PREPROCESSING
 
-# for comb in [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]:
-for comb in [['E243', 'K248'], ['E243', 'N200c']]:
-
-    # PROCESS NAMES.
     fullResidueName = comb[0]           # E35
     fullTargetName  = comb[1]           # T158c
     residue = int(fullResidueName[1:])  # 35
     target  = fullTargetName[1:]        # 158c
 
-    # SELECT CORRECT CHAIN.
     if target[-1] == 'p':
         chains2 = ['B', 'C', 'D', 'E', 'A']
-        target = target[:-1]  # Remove the trailing letter (158c -> 158).
+        target = target[:-1]  # Remove trailing letter (158c -> 158).
     elif target[-1] == 'c':
         chains2 = ['E', 'A', 'B', 'C', 'D']
-        target = target[:-1]  # Remove the trailing letter (158c -> 158).
+        target = target[:-1]  # Remove trailing letter (158c -> 158).
     else:
         chains2 = ['A', 'B', 'C', 'D', 'E']
 
-    # MULTIPROCESSING TASK.
-    def task(sim, rep, residue, target, chains1, chains2):
-        fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[0]}_{chains2[0]}.txt'
-        if not os.path.isfile(fname):
-
-            p1 = f'../sims/{sim}/{rep:02d}/CA.pdb'
-            p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
-            u  = MDAnalysis.Universe(p1, p2)
-
-            for idx in range(0, len(chains1)):
-
-                sel1 = u.select_atoms(f'chainID {chains1[idx]} and resid {residue} and {carboxylAtoms}')
-                sel2 = u.select_atoms(f'chainID {chains2[idx]} and resid {target}  and {polarAtoms}')
-
-                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[idx]}_{chains2[idx]}.txt'
-                with open(fname, 'w+') as file:
-                    for ts in u.trajectory:
-                        if distance_array(sel1, sel2).min() < 4.0:
-                            file.write(f'{ts.frame}\n')
-
-    # PREPARE ITERABLES.
-    items = []
-    for sim in sims:
-        for rep in reps:
-            items.append((sim, rep, residue, target, chains1, chains2))
-
-    # RUN MULTITHREADED.
-    pool = mp.Pool(processes=mp.cpu_count())
-    pool.starmap(task, items, chunksize=1)
-
-    #! BLOOM DATA GENERATION PART ##############################################
-
-    # TASK
-    def doBlooming(sim, rep, residue, target, chain1, chain2):
-
-        def dist(c1, c2) -> float:
-            x = c1[0] - c2[0]
-            y = c1[1] - c2[1]
-            z = c1[2] - c2[2]
-            return (x * x + y * y + z * z)**0.5
-
-        fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat'
-        if not os.path.exists(fname):
-
-            p1 = f'../sims/{sim}/{rep:02d}/CA.pdb'
-            p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
-            u  = MDAnalysis.Universe(p1, p2)
-
-            superData = makeSuperDict([metrics, []])
-
-            fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt'
-            contactFrameIndices = [int(val) for val in loadCol(fname)]
-
-            for ts in u.trajectory:
-
-            # for jj in contactFrameIndices:
-                # u.trajectory[jj]
-
-                # *** ecd_twist ***
-                if 'ecd_twist' in metrics:
-                    ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
-                    ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
-                    TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
-                    TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
-                    ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
-                    ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
-                    ecd_twist_universe.atoms.positions = ecd_twist_coords
-                    superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
-
-                # *** beta_expansion ***
-                if 'beta_expansion' in metrics:
-                    beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
-                    beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
-                    superData['beta_expansion'].append(dist(beta_com1, beta_com2))
-
-                # *** m2_m1_dist ***
-                if 'm2_m1_dist' in metrics:
-                    #? Cathrine defines the M2-M1(-) distance as the distance between
-                    #? M2 in chain B with M1 in chain A (i.e. M2(i+1) with M1(i) ).
-                    #? Furthermore, In VMD we observe that E243, K248 are in M2 in
-                    #? chain B while N200c is in M1 in chain A.
-                    #? Therefore: [E243](i)-[xxx][x] -> M2(i) - M1(i-1) or:
-                    #? [E243](i+1)-[xxx][x] -> M2(i+1) - M1(i).
-                    chainMap = {'A': 'E', 'B': 'A', 'C': 'B', 'D': 'C', 'E': 'D'}
-                    m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
-                    m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chainMap[chain1]}").center_of_mass()
-                    superData['m2_m1_dist'].append(dist(m1_com, m2_com))
-
-                # *** nine_prime_dist ***
-                if 'nine_prime_dist' in metrics:
-                    min_dist = 10000000
-                    resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
-                    ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
-                    for pos in resid1.positions:
-                        distance = dist(pos, ca_com)
-                        if distance < min_dist:
-                            min_dist = distance
-                    superData['nine_prime_dist'].append(min_dist)
-
-                # *** Anton: come up with your own metric for loop-C here, e.g. RMSD ***
-                if 'loopc' in metrics:
-                    pass
-                # Possibly minimum distance?
-                # loopC_com = u.select_atoms(f"protein and resid 172:184 and name CA and chainID {chain1}").center_of_mass()
-                # prote_com = u.select_atoms(f"protein and resid xxx and name CA and chainID {chain1}").center_of_mass()
-                # superData['loopc'].append(dist(loopC_com, prote_com))
-
-                # RMSD?
-                # R = MDAnalysis.analysis.rms.RMSD(u, select=f'protein and resid 172:184 and name CA and chainID {chain1}')
-                # R.run(start=jj, stop=jj)
-                # val = R.rmsd.T[2]
-                # superData['loopc'].append(dist(val))
-
-            with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat', 'w') as file:
-                # Write header.
-                for metric in metrics:
-                    file.write('{} '.format(metric))
-                file.write('\n')
-                # Write data.
-                for kk in range(0, len(superData[metrics[0]])):
-                    for metric in metrics:
-                        file.write('{:.4f} '.format(superData[metric][kk]))
-                    file.write('\n')
-
-    # GATHER ITERABLES
-    items = []
-    for sim in sims:
-        for rep in reps:
-            for idx in range(0, len(chains1)):
-                items.append((sim, rep, residue, target, chains1[idx], chains2[idx]))
-
-    # RUN MULTITHREADED
-    pool = mp.Pool(processes=mp.cpu_count())
-    pool.starmap(doBlooming, items, chunksize=1)
-
-    #! VISUALIZATION PART ######################################################
-
-    #? Load+process the data for the full trajectories from bloom.
+    # GATHER DATA / full trajectories from 'bloom' directory.
 
     allmetrics = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
-    fullData   = makeSuperDict([sims, reps, chains1, allmetrics, []])
+    fullData   = makeSuperDict([sims, reps, chains, allmetrics, []])
     fullResult = makeSuperDict([sims, allmetrics, []])
 
-    # Load the data.
     for sim in sims:
         for rep in reps:
-            for chain in chains1:
+            for chain in chains:
                 fname = f'bloom/{sim}_{rep}_{chain}.txt'
                 for idx in range(0, len(allmetrics)):
                     fullData[sim][rep][chain][allmetrics[idx]] = loadCol(fname, idx + 1, header=0)
 
-    # Get the results.
     for sim in sims:
         for metric in allmetrics:
             for rep in reps:
-                for chain in chains1:
+                for chain in chains:
                     fullResult[sim][metric].append(np.mean(fullData[sim][rep][chain][metric]))
 
-    #? Load+process the data filtered for the contact.
+    # GATHER DATA / filtered data from the contact.
 
-    filteredData   = makeSuperDict([sims, reps, chains1, metrics, []])
+    filteredData   = makeSuperDict([sims, reps, chains, metrics, []])
     filteredResult = makeSuperDict([sims, metrics, []])
 
-    # Load the data.
     for sim in sims:
         for rep in reps:
-            for ii in range(0, len(chains1)):
-                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains1[ii]}_{chains2[ii]}.dat'
+            for ii in range(0, len(chains)):
+                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chains[ii]}_{chains2[ii]}.txt'
                 for idx in range(0, len(metrics)):
-                        filteredData[sim][rep][chains1[ii]][metrics[idx]] = loadCol(fname, idx + 1, header=0)
+                        filteredData[sim][rep][chains[ii]][metrics[idx]] = loadCol(fname, idx + 1, header=0)
 
-    # Get the results.
     for sim in sims:
         for metric in metrics:
             for rep in reps:
-                for chain in chains1:
+                for chain in chains:
                     # If a file is empty this will results in a np.mean being
                     # taken over an empty list, which will results in a np.NAN
                     # being returned. We need to remove these before we proceed.
@@ -231,7 +79,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
                     if len(array) > 0:
                         filteredResult[sim][metric].append(np.mean(array))
 
-    #? Make BARPLOTS, comparing the two sets.
+    # MAKE THE BARPLOTS
 
     nameList = ['All', f'{fullResidueName}-{fullTargetName}']
     width    = 0.2
@@ -304,7 +152,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
         plt.clf()
         plt.close()
 
-    #? Make HISTOGRAMS, comparing the two sets (All vs contact).
+    # MAKE THE HISTOGRAMS
 
     for metric in metrics:
 
@@ -346,7 +194,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
                 histList = []
 
                 for rep in reps:
-                    for chain in chains1:
+                    for chain in chains:
 
                         # Get histogram values and corresponding bin_edges
                         if idx == 0:
@@ -354,7 +202,7 @@ for comb in [['E243', 'K248'], ['E243', 'N200c']]:
                         if idx == 1:
                             x = filteredData[sim][rep][chain][metric]
 
-                        hist, bin_edges = np.histogram(x, density=True, bins=50, range=histRange)
+                        hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
 
                         # Another bug fix to prevent nan from np.mean([])
                         if 'nan' in [str(val) for val in hist]:

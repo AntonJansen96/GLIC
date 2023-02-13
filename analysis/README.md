@@ -29,9 +29,14 @@
 * Requires prior running of `contactData.py` as it needs the `contacts/xxx` files.
 * BUG: protonation columns for HSPT (in the plots) are not correct.
 
-`couple.py`
+`coupleData.py`
 * Associated with the directory `couple`.
 * Selects frame (indices) from various trajectories and subsequently runs Cathrine's blooming on these subsets.
+
+`couplePlot.py`
+* Associated with the directory `couple`.
+* Selects frame (indices) from various trajectories and subsequently runs Cathrine's blooming on these subsets.
+* Requires prior running of `coupleData.py` as it needs the `couple/xxx` files.
 
 `custom.py`
 * Associated with the directory `contacts`.
