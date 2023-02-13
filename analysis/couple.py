@@ -26,8 +26,8 @@ chains1   = ['A', 'B', 'C', 'D', 'E']
 carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
 polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
 
+for comb in [['E243', 'K248'], ['E243', 'N200c']]:
 # for comb in [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]:
-for comb in [['E26', 'V79p']]:
 
     # PROCESS NAMES.
     fullResidueName = comb[0]           # E35
@@ -93,63 +93,68 @@ for comb in [['E26', 'V79p']]:
             p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
             u  = MDAnalysis.Universe(p1, p2)
 
-            for ii in range(0, len(chains1)):
+            metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
+            superData = makeSuperDict([metrics, []])
 
-                metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
-                superData = makeSuperDict([metrics, []])
+            fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt'
+            contactFrameIndices = [int(val) for val in loadCol(fname)]
 
-                fname = f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt'
-                contactFrameIndices = [int(val) for val in loadCol(fname)]
+            for jj in contactFrameIndices:
+                u.trajectory[jj]
 
-                for jj in contactFrameIndices:
-                    u.trajectory[jj]
+                # *** ecd_twist ***
 
-                    # *** ecd_twist ***
+                ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
+                ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
+                TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
+                TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
+                ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
+                ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
+                ecd_twist_universe.atoms.positions = ecd_twist_coords
+                superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
 
-                    ECD_su_com = u.select_atoms(f"protein and resid   0:193 and name CA and chainID {chain1}").center_of_mass()
-                    ECD_com    = u.select_atoms( "protein and resid   0:193 and name CA").center_of_mass()
-                    TMD_com    = u.select_atoms( "protein and resid 194:315 and name CA").center_of_mass()
-                    TMD_su_com = u.select_atoms(f"protein and resid 194:315 and name CA and chainID {chain1}").center_of_mass()
-                    ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
-                    ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
-                    ecd_twist_universe.atoms.positions = ecd_twist_coords
-                    superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
+                # *** beta_expansion ***
 
-                    # *** beta_expansion ***
+                beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
+                beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
+                superData['beta_expansion'].append(dist(beta_com1, beta_com2))
 
-                    beta_com1 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid  30:34 ").center_of_mass()
-                    beta_com2 = u.select_atoms(f"protein and chainID {chain1} and name CA and resid 190:194").center_of_mass()
-                    superData['beta_expansion'].append(dist(beta_com1, beta_com2))
+                # *** m2_m1_dist ***
 
-                    # *** m2_m1_dist ***
+                #? Cathrine defines the M2-M1(-) distance as the distance between
+                #? M2 in chain B with M1 in chain A (i.e. M2(i+1) with M1(i) ).
+                #? Furthermore, In VMD we observe that E243, K248 are in M2 in
+                #? chain B while N200c is in M1 in chain A.
+                #? Therefore: [E243](i)-[xxx][x] -> M2(i) - M1(i-1) or:
+                #? [E243](i+1)-[xxx][x] -> M2(i+1) - M1(i).
+                chainMap = {'A': 'E', 'B': 'A', 'C': 'B', 'D': 'C', 'E': 'D'}
+                m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
+                m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chainMap[chain1]}").center_of_mass()
+                superData['m2_m1_dist'].append(dist(m1_com, m2_com))
 
-                    m2_com = u.select_atoms(f"protein and resid 241:245 and name CA and chainID {chain1}").center_of_mass()
-                    m1_com = u.select_atoms(f"protein and resid 200:204 and name CA and chainID {chain2}").center_of_mass()
-                    superData['m2_m1_dist'].append(dist(m1_com, m2_com))
+                # *** nine_prime_dist ***
 
-                    # *** nine_prime_dist ***
+                min_dist = 10000000
+                resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
+                ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
+                for pos in resid1.positions:
+                    distance = dist(pos, ca_com)
+                    if distance < min_dist:
+                        min_dist = distance
+                superData['nine_prime_dist'].append(min_dist)
 
-                    min_dist = 10000000
-                    resid1 = u.select_atoms(f'protein and resid 233 and chainID {chain1}')
-                    ca_com = u.select_atoms( 'protein and resid 233 and name CA').center_of_mass()
-                    for pos in resid1.positions:
-                        distance = dist(pos, ca_com)
-                        if distance < min_dist:
-                            min_dist = distance
-                    superData['nine_prime_dist'].append(min_dist)
+                # *** Anton: come up with your own metric for loop-C here, e.g. RMSD ***
 
-                    # *** Anton: come up with your own metric for loop-C here, e.g. RMSD ***
-
-                with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat', 'w') as file:
-                    # Write header.
+            with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.dat', 'w') as file:
+                # Write header.
+                for metric in metrics:
+                    file.write('{} '.format(metric))
+                file.write('\n')
+                # Write data.
+                for kk in range(0, len(superData['nine_prime_dist'])):
                     for metric in metrics:
-                        file.write('{} '.format(metric))
+                        file.write('{:.4f} '.format(superData[metric][kk]))
                     file.write('\n')
-                    # Write data.
-                    for kk in range(0, len(superData['nine_prime_dist'])):
-                        for metric in metrics:
-                            file.write('{:.4f} '.format(superData[metric][kk]))
-                        file.write('\n')
 
     # GATHER ITERABLES
     items = []
