@@ -15,7 +15,7 @@ combs = loopC
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
-metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
+metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc', 'loopc2']
 
 def stderr(array):
     return np.std(array) / np.sqrt(len(array))
@@ -145,7 +145,11 @@ for comb in combs:
 
         if metric == 'loopc':
             plt.ylabel('loopC-loopB Distance (Å)')
-            plt.ylim(10, 14)
+            plt.ylim(9, 16)
+
+        if metric == 'loopc2':
+            plt.ylabel('loopC-comp Distance (Å)')
+            plt.ylim(13, 19)
 
         plt.legend()
         outname = f'couple/{residue}_{target}_{metric}.png'
@@ -180,6 +184,10 @@ for comb in combs:
         if metric == 'loopc':
             histRange = (8, 18)
             xlabel = 'loopC-loopB Distance (Å)'
+
+        if metric == 'loopc2':
+            histRange = (12, 20)
+            xlabel = 'loopC-comp Distance (Å)'
 
         # Start building the figure
 
@@ -238,8 +246,8 @@ for comb in combs:
                 # in tern come from 4HFI_clean_crystal.pdb and 6ZGD_clean_cryoEM.pdb.
                 # Margins in matplotlib are 1.05 * largest value = max(maxval).
                 # This is to make sure that the vlines reach top of figure without rescaling.
-                static4HFI = {'ecd_twist': -11.631, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'nine_prime_dist': 5.075, 'loopc': 0}
-                static6ZGD = {'ecd_twist': -16.832, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'nine_prime_dist': 3.497, 'loopc': 0}
+                static4HFI = {'ecd_twist': -11.631, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'nine_prime_dist': 5.075, 'loopc': 0, 'loopc2': 0}
+                static6ZGD = {'ecd_twist': -16.832, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'nine_prime_dist': 3.497, 'loopc': 0, 'loopc2': 0}
 
                 if sim == '4HFI_4':
                     subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')

@@ -16,7 +16,7 @@ combs = alla + loopC
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
-metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
+metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc', 'loopc2']
 
 carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
 polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
@@ -58,8 +58,9 @@ def task(residue, target, sim, rep, chain1, chain2):
     ca = u.select_atoms('resid 233 and name CA')
     ninePrime = u.select_atoms(f'resid 233 and chainID {chain1}')
 
-    loopc = u.select_atoms(f'resid 177:185 and name CA and chainID {chain1}')
-    aloop = u.select_atoms(f'resid 134:140 and name CA and chainID {chain1}')
+    loopc = u.select_atoms(f'resid 174:182 and name CA and chainID {chain1}')
+    xloop = u.select_atoms(f'resid 134:140 and name CA and chainID {chain1}')
+    yloop = u.select_atoms(f'resid 145:150 and name CA and chainID {chainMap[chain1]}')
 
     # Start looping through the trajectory.
     for _ in u.trajectory:
@@ -101,15 +102,13 @@ def task(residue, target, sim, rep, chain1, chain2):
 
             if 'loopc' in metrics:
                 loopc_com = loopc.center_of_mass()
-                aloop_com = aloop.center_of_mass()
-                superData['loopc'].append(dist(loopc_com, aloop_com))
+                xloop_com = xloop.center_of_mass()
+                superData['loopc'].append(dist(loopc_com, xloop_com))
 
-                # FUCK RMSD for now
-                # import MDAnalysis.analysis.rms
-                # R = MDAnalysis.analysis.rms.RMSD(u, select=f'chainID {chain1} and name CA and resid 177:185')
-                # R.run(start=frame, stop=frame + 1)
-                # x1 = R.rmsd.T[2]
-                # superData['loopc'].append(x1[0])
+            if 'loopc2' in metrics:
+                loopc_com = loopc.center_of_mass()
+                yloop_com = yloop.center_of_mass()
+                superData['loopc2'].append(dist(loopc_com, yloop_com))
 
     with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt', 'w') as file:
         # Write header.
@@ -152,8 +151,8 @@ for comb in combs:
     items = []
     for sim in sims:
         for rep in reps:
-                for ii in range(0, len(chains)):
-                    items.append((residue, target, sim, rep, chains[ii], chains2[ii]))
+            for ii in range(0, len(chains)):
+                items.append((residue, target, sim, rep, chains[ii], chains2[ii]))
 
     # RUN MULTIPROCESSING
 
