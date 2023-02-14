@@ -8,11 +8,15 @@ from science.utility import makeSuperDict
 
 # PARAMETERS
 
-combs   = [['E243', 'K248'], ['E243', 'N200c']]
+alla  = [['all', 'all']]
+regul = [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]
+loopC = [['E177', 'K148c'], ['D178', 'K148c'], ['E181', 'R133'], ['D185', 'I128']]
+combs = alla + loopC
+
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
-metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
+metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
 
 carboxylAtoms = 'name OE1 OE2 OD1 OD2 NE2 ND1'
 polarAtoms    = 'name NZ NE2 OD2 OE1 OD1 NE OG1 OH ND2 OE2 OT1 NH2 O NH1 NE1 N ND1 OT2 OG'
@@ -35,8 +39,9 @@ def task(residue, target, sim, rep, chain1, chain2):
 
     # * Take this out of the loop for speedup.
 
-    sel1 = u.select_atoms(f'chainID {chain1} and resid {residue} and {carboxylAtoms}')
-    sel2 = u.select_atoms(f'chainID {chain2} and resid {target} and {polarAtoms}')
+    if residue != 'all':
+        sel1 = u.select_atoms(f'chainID {chain1} and resid {residue} and {carboxylAtoms}')
+        sel2 = u.select_atoms(f'chainID {chain2} and resid {target} and {polarAtoms}')
 
     ECD_su = u.select_atoms(f"resid   0:193 and name CA and chainID {chain1}")
     ECD    = u.select_atoms( "resid   0:193 and name CA")
@@ -53,12 +58,15 @@ def task(residue, target, sim, rep, chain1, chain2):
     ca = u.select_atoms('resid 233 and name CA')
     ninePrime = u.select_atoms(f'resid 233 and chainID {chain1}')
 
+    loopc = u.select_atoms(f'resid 177:185 and name CA and chainID {chain1}')
+    aloop = u.select_atoms(f'resid 134:140 and name CA and chainID {chain1}')
+
     # Start looping through the trajectory.
     for _ in u.trajectory:
         # If our selection is making a contact, continue with the analysis.
-        if distance_array(sel1, sel2).min() < 4.0:
+        if (residue == 'all') or (distance_array(sel1, sel2).min() < 4.0):
 
-            if 'ecd_twist' in metrics:  # Good.
+            if 'ecd_twist' in metrics:
 
                 ECD_su_com = ECD_su.center_of_mass()
                 ECD_com    = ECD.center_of_mass()
@@ -75,13 +83,14 @@ def task(residue, target, sim, rep, chain1, chain2):
                 beta_com2 = beta2.center_of_mass()
                 superData['beta_expansion'].append(dist(beta_com1, beta_com2))
 
-            if 'm2_m1_dist' in metrics:  # Good.
+            if 'm2_m1_dist' in metrics:
 
                 m2_com = m2.center_of_mass()
                 m1_com = m1.center_of_mass()
                 superData['m2_m1_dist'].append(dist(m1_com, m2_com))
 
-            if 'nine_prime_dist' in metrics:  # Good.
+            if 'nine_prime_dist' in metrics:
+
                 ca_com = ca.center_of_mass()
                 min_dist = 10000000
                 for pos in ninePrime.positions:
@@ -89,6 +98,18 @@ def task(residue, target, sim, rep, chain1, chain2):
                     if distance < min_dist:
                         min_dist = distance
                 superData['nine_prime_dist'].append(min_dist)
+
+            if 'loopc' in metrics:
+                loopc_com = loopc.center_of_mass()
+                aloop_com = aloop.center_of_mass()
+                superData['loopc'].append(dist(loopc_com, aloop_com))
+
+                # FUCK RMSD for now
+                # import MDAnalysis.analysis.rms
+                # R = MDAnalysis.analysis.rms.RMSD(u, select=f'chainID {chain1} and name CA and resid 177:185')
+                # R.run(start=frame, stop=frame + 1)
+                # x1 = R.rmsd.T[2]
+                # superData['loopc'].append(x1[0])
 
     with open(f'couple/{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt', 'w') as file:
         # Write header.
@@ -109,8 +130,13 @@ for comb in combs:
 
     fullResidueName = comb[0]           # E35
     fullTargetName  = comb[1]           # T158c
-    residue = int(fullResidueName[1:])  # 35
-    target  = fullTargetName[1:]        # 158c
+
+    if fullResidueName == 'all':
+        residue = fullResidueName
+        target  = fullTargetName
+    else:
+        residue = int(fullResidueName[1:])  # 35
+        target  = fullTargetName[1:]        # 158c
 
     if target[-1] == 'p':
         chains2 = ['B', 'C', 'D', 'E', 'A']

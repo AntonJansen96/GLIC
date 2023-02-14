@@ -8,11 +8,14 @@ import os
 from science.utility import makeSuperDict
 from science.parsing import loadCol
 
-combs   = [['E243', 'K248'], ['E243', 'N200c']]
+regul = [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]
+loopC = [['E177', 'K148c'], ['D178', 'K148c'], ['E181', 'R133'], ['D185', 'I128']]
+combs = loopC
+
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
 chains  = ['A', 'B', 'C', 'D', 'E']
-metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist']
+metrics = ['ecd_twist', 'beta_expansion', 'm2_m1_dist', 'nine_prime_dist', 'loopc']
 
 def stderr(array):
     return np.std(array) / np.sqrt(len(array))
@@ -39,19 +42,18 @@ for comb in combs:
 
     # GATHER DATA / full trajectories from 'bloom' directory.
 
-    allmetrics = ['ecd_twist', 'ecd_spread', 'ecd_upper_spread', 'beta_expansion', 'm2_m1_dist', 'm2_radius', 'm1_kink', 'm1_kink_alt', 'nine_prime_dist', 'nine_prime_pore', 'minus_two_prime_dist', 'minus_two_prime_pore', 'c_loop']
-    fullData   = makeSuperDict([sims, reps, chains, allmetrics, []])
-    fullResult = makeSuperDict([sims, allmetrics, []])
+    fullData   = makeSuperDict([sims, reps, chains, metrics, []])
+    fullResult = makeSuperDict([sims, metrics, []])
 
     for sim in sims:
         for rep in reps:
             for chain in chains:
-                fname = f'bloom/{sim}_{rep}_{chain}.txt'
-                for idx in range(0, len(allmetrics)):
-                    fullData[sim][rep][chain][allmetrics[idx]] = loadCol(fname, idx + 1, header=0)
+                fname = f'couple/all_all_{sim}_{rep}_{chain}_{chain}.txt'
+                for idx in range(0, len(metrics)):
+                    fullData[sim][rep][chain][metrics[idx]] = loadCol(fname, idx + 1, header=0)
 
     for sim in sims:
-        for metric in allmetrics:
+        for metric in metrics:
             for rep in reps:
                 for chain in chains:
                     fullResult[sim][metric].append(np.mean(fullData[sim][rep][chain][metric]))
@@ -142,11 +144,12 @@ for comb in combs:
             plt.ylim(2.5, 4)
 
         if metric == 'loopc':
-            plt.ylabel('loop-C (Å)')
-            plt.ylim(0, 50)
+            plt.ylabel('loopC-loopB Distance (Å)')
+            plt.ylim(10, 14)
 
         plt.legend()
         outname = f'couple/{residue}_{target}_{metric}.png'
+        plt.tight_layout()
         plt.savefig(outname)
         os.system(f'convert {outname} -trim {outname}')
         plt.clf()
@@ -175,8 +178,8 @@ for comb in combs:
             xlabel = '9\' Radius (Å)'
 
         if metric == 'loopc':
-            histRange(0, 50)
-            xlabel = 'loop-C (Å)'
+            histRange = (8, 18)
+            xlabel = 'loopC-loopB Distance (Å)'
 
         # Start building the figure
 
@@ -202,7 +205,7 @@ for comb in combs:
                         if idx == 1:
                             x = filteredData[sim][rep][chain][metric]
 
-                        hist, bin_edges = np.histogram(x, density=True, bins=20, range=histRange)
+                        hist, bin_edges = np.histogram(x, density=True, bins=30, range=histRange)
 
                         # Another bug fix to prevent nan from np.mean([])
                         if 'nan' in [str(val) for val in hist]:
@@ -235,8 +238,8 @@ for comb in combs:
                 # in tern come from 4HFI_clean_crystal.pdb and 6ZGD_clean_cryoEM.pdb.
                 # Margins in matplotlib are 1.05 * largest value = max(maxval).
                 # This is to make sure that the vlines reach top of figure without rescaling.
-                static4HFI = {'ecd_twist': -11.631, 'ecd_spread': 23.796, 'ecd_upper_spread': 25.487, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'm2_radius': 21.583, 'm1_kink': 156.102, 'm1_kink_alt': 164.330, 'nine_prime_dist': 5.075, 'nine_prime_pore': 7.626, 'minus_two_prime_dist': 11.420, 'minus_two_prime_pore': 6.004, 'c_loop': 13.966}
-                static6ZGD = {'ecd_twist': -16.832, 'ecd_spread': 23.548, 'ecd_upper_spread': 24.948, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'm2_radius': 19.425, 'm1_kink': 157.222, 'm1_kink_alt': 160.535, 'nine_prime_dist': 3.497, 'nine_prime_pore': 5.973, 'minus_two_prime_dist': 11.200, 'minus_two_prime_pore': 5.888, 'c_loop': 14.378}
+                static4HFI = {'ecd_twist': -11.631, 'beta_expansion': 13.767, 'm2_m1_dist': 14.094, 'nine_prime_dist': 5.075, 'loopc': 0}
+                static6ZGD = {'ecd_twist': -16.832, 'beta_expansion': 15.430, 'm2_m1_dist': 17.270, 'nine_prime_dist': 3.497, 'loopc': 0}
 
                 if sim == '4HFI_4':
                     subplt.plot(bin_edges[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
