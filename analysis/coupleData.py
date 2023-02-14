@@ -11,7 +11,7 @@ from science.utility import makeSuperDict
 alla  = [['all', 'all']]
 regul = [['E26', 'V79p'], ['E26', 'N80p'], ['E26', 'V81p'], ['E82', 'T36'], ['E82', 'K38c'], ['E35', 'L114'], ['E243', 'K248'], ['E243', 'N200c']]
 loopC = [['E177', 'K148c'], ['D178', 'K148c'], ['E181', 'R133'], ['D185', 'I128']]
-combs = alla + loopC
+combs = alla + regul + loopC
 
 sims    = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 reps    = [1, 2, 3, 4]
