@@ -37,13 +37,13 @@ def task(residue, target, sim, rep, chain1, chain2):
     p2 = f'../../sims/{sim}/{rep:02d}/MD_conv.xtc'
     u = MDAnalysis.Universe(p1, p2)
 
-    superData = makeSuperDict([metrics, []])
+    withinData = makeSuperDict([metrics, []])
+    withoutData = makeSuperDict([metrics, []])
 
     # * Take this out of the loop for speedup.
 
-    if residue != 'all':
-        sel1 = u.select_atoms(f'chainID {chain1} and resid {residue} and {carboxylAtoms}')
-        sel2 = u.select_atoms(f'chainID {chain2} and resid {target} and {polarAtoms}')
+    sel1 = u.select_atoms(f'chainID {chain1} and resid {residue} and {carboxylAtoms}')
+    sel2 = u.select_atoms(f'chainID {chain2} and resid {target} and {polarAtoms}')
 
     ECD_su = u.select_atoms(f"resid   0:193 and name CA and chainID {chain1}")
     ECD    = u.select_atoms( "resid   0:193 and name CA")
@@ -66,61 +66,91 @@ def task(residue, target, sim, rep, chain1, chain2):
 
     # Start looping through the trajectory.
     for _ in u.trajectory:
-        # If our selection is making a contact, continue with the analysis.
-        if (residue == 'all') or (distance_array(sel1, sel2).min() < 4.0):
 
-            if 'ecd_twist' in metrics:
+        #? In this particular frame, are we making a contact or not?
+        boolContact: bool = distance_array(sel1, sel2).min() < 4.0
 
-                ECD_su_com = ECD_su.center_of_mass()
-                ECD_com    = ECD.center_of_mass()
-                TMD_com    = TMD.center_of_mass()
-                TMD_su_com = TMD_su.center_of_mass()
-                ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
-                ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
-                ecd_twist_universe.atoms.positions = ecd_twist_coords
-                superData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
+        if 'ecd_twist' in metrics:
 
-            if 'beta_expansion' in metrics:
+            ECD_su_com = ECD_su.center_of_mass()
+            ECD_com    = ECD.center_of_mass()
+            TMD_com    = TMD.center_of_mass()
+            TMD_su_com = TMD_su.center_of_mass()
+            ecd_twist_coords   = np.array([ECD_su_com, ECD_com, TMD_com, TMD_su_com])
+            ecd_twist_universe = MDAnalysis.Universe.empty(4, trajectory=True)
+            ecd_twist_universe.atoms.positions = ecd_twist_coords
+            if boolContact:
+                withinData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
+            else:
+                withoutData['ecd_twist'].append(MDAnalysis.core.topologyobjects.Dihedral([0, 1, 2, 3], ecd_twist_universe).dihedral())
 
-                beta_com1 = beta1.center_of_mass()
-                beta_com2 = beta2.center_of_mass()
-                superData['beta_expansion'].append(dist(beta_com1, beta_com2))
+        if 'beta_expansion' in metrics:
 
-            if 'm2_m1_dist' in metrics:
+            beta_com1 = beta1.center_of_mass()
+            beta_com2 = beta2.center_of_mass()
+            if boolContact:
+                withinData['beta_expansion'].append(dist(beta_com1, beta_com2))
+            else:
+                withoutData['beta_expansion'].append(dist(beta_com1, beta_com2))
 
-                m2_com = m2.center_of_mass()
-                m1_com = m1.center_of_mass()
-                superData['m2_m1_dist'].append(dist(m1_com, m2_com))
+        if 'm2_m1_dist' in metrics:
 
-            if 'nine_prime_dist' in metrics:
+            m2_com = m2.center_of_mass()
+            m1_com = m1.center_of_mass()
+            if boolContact:
+                withinData['m2_m1_dist'].append(dist(m1_com, m2_com))
+            else:
+                withoutData['m2_m1_dist'].append(dist(m1_com, m2_com))
 
-                ca_com = ca.center_of_mass()
-                min_dist = 10000000
-                for pos in ninePrime.positions:
-                    distance = dist(pos, ca_com)
-                    if distance < min_dist:
-                        min_dist = distance
-                superData['nine_prime_dist'].append(min_dist)
+        if 'nine_prime_dist' in metrics:
 
-            if 'loopc' in metrics:
-                loopc_com = loopc.center_of_mass()
-                xloop_com = xloop.center_of_mass()
-                superData['loopc'].append(dist(loopc_com, xloop_com))
+            ca_com = ca.center_of_mass()
+            min_dist = 10000000
+            for pos in ninePrime.positions:
+                distance = dist(pos, ca_com)
+                if distance < min_dist:
+                    min_dist = distance
+            if boolContact:
+                withinData['nine_prime_dist'].append(min_dist)
+            else:
+                withoutData['nine_prime_dist'].append(min_dist)
 
-            if 'loopc2' in metrics:
-                loopc_com = loopc.center_of_mass()
-                yloop_com = yloop.center_of_mass()
-                superData['loopc2'].append(dist(loopc_com, yloop_com))
+        if 'loopc' in metrics:
+            loopc_com = loopc.center_of_mass()
+            xloop_com = xloop.center_of_mass()
+            if boolContact:
+                withinData['loopc'].append(dist(loopc_com, xloop_com))
+            else:
+                withoutData['loopc'].append(dist(loopc_com, xloop_com))
 
-    with open(f'{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}.txt', 'w') as file:
+        if 'loopc2' in metrics:
+            loopc_com = loopc.center_of_mass()
+            yloop_com = yloop.center_of_mass()
+            if boolContact:
+                withinData['loopc2'].append(dist(loopc_com, yloop_com))
+            else:
+                withoutData['loopc2'].append(dist(loopc_com, yloop_com))
+
+    with open(f'{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}_yes.txt', 'w') as file:
         # Write header.
         for metric in metrics:
             file.write('{} '.format(metric))
         file.write('\n')
         # Write data.
-        for kk in range(0, len(superData[metrics[0]])):
+        for kk in range(0, len(withinData[metrics[0]])):
             for metric in metrics:
-                file.write('{:.4f} '.format(superData[metric][kk]))
+                file.write('{:.4f} '.format(withinData[metric][kk]))
+            file.write('\n')
+
+    with open(f'{residue}_{target}_{sim}_{rep}_{chain1}_{chain2}_no.txt', 'w') as file:
+        # Write header.
+        for metric in metrics:
+            file.write('{} '.format(metric))
+        file.write('\n')
+        # Write data.
+        for kk in range(0, len(withoutData[metrics[0]])):
+            for metric in metrics:
+                file.write('{:.4f} '.format(withoutData[metric][kk]))
             file.write('\n')
 
 # MAIN CODE
@@ -197,16 +227,21 @@ if opMode == 2:
 
         for sim in sims:
             for rep in reps:
-                for chain in chains:
-                    fname = f'all_all_{sim}_{rep}_{chain}_{chain}.txt'
+                for ii in range(0, len(chains)):
+                    fname = f'{residue}_{target}_{sim}_{rep}_{chains[ii]}_{chains2[ii]}_no.txt'
                     for idx in range(0, len(metrics)):
-                        fullData[sim][rep][chain][metrics[idx]] = loadCol(fname, idx + 1, header=0)
+                        fullData[sim][rep][chains[ii]][metrics[idx]] = loadCol(fname, idx + 1, header=0)
 
         for sim in sims:
             for metric in metrics:
                 for rep in reps:
                     for chain in chains:
-                        fullResult[sim][metric].append(np.mean(fullData[sim][rep][chain][metric]))
+                        # If a file is empty this will results in a np.mean being
+                        # taken over an empty list, which will results in a np.NAN
+                        # being returned. We need to remove these before we proceed.
+                        array = fullData[sim][rep][chain][metric]
+                        if len(array) > 0:
+                            fullResult[sim][metric].append(np.mean(array))
 
         # GATHER DATA / filtered data from the contact.
 
@@ -216,7 +251,7 @@ if opMode == 2:
         for sim in sims:
             for rep in reps:
                 for ii in range(0, len(chains)):
-                    fname = f'{residue}_{target}_{sim}_{rep}_{chains[ii]}_{chains2[ii]}.txt'
+                    fname = f'{residue}_{target}_{sim}_{rep}_{chains[ii]}_{chains2[ii]}_yes.txt'
                     for idx in range(0, len(metrics)):
                             filteredData[sim][rep][chains[ii]][metrics[idx]] = loadCol(fname, idx + 1, header=0)
 
@@ -233,7 +268,7 @@ if opMode == 2:
 
         # MAKE THE BARPLOTS
 
-        nameList = ['All', f'{fullResidueName}-{fullTargetName}']
+        nameList = [f'No {fullResidueName}-{fullTargetName}', f'{fullResidueName}-{fullTargetName}']
         width    = 0.2
         x        = np.arange(len(nameList))
 
@@ -422,7 +457,7 @@ if opMode == 2:
                 subplt.set_xlim(histRange)
 
                 if idx == 0:
-                    subplt.set_ylabel('All')
+                    subplt.set_ylabel(f'Not {fullResidueName}-{fullTargetName}')
                     subplt.legend(loc='best', prop={'size': 14})
 
                 if idx == 1:
