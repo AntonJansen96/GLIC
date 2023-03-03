@@ -8,7 +8,7 @@ from science.utility import makeSuperDict
 from science.parsing import loadCol
 
 # Set global font size for figures.
-matplotlib.rcParams.update({'font.size': 14})
+matplotlib.rcParams.update({'font.size': 24})
 
 
 def stderr(array):
@@ -67,40 +67,41 @@ def doPlot1(actual, ylim, ylabel, fname):
     # Some plotting stuff
     width = 0.2
     x     = np.arange(len(nameList))
-    fig   = plt.figure(figsize=(6, 6))
+    fig   = plt.figure(figsize=(6, 6), dpi=300)
     ax    = fig.add_subplot()
 
     # 6ZGD_7
     mean4 = meanList['6ZGD_7']
     serr4 = serrList['6ZGD_7']
-    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, pH 7')
-    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+    ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, pH 7.0')
+    ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
 
     # 6ZGD_4
     mean3 = meanList['6ZGD_4']
     serr3 = serrList['6ZGD_4']
-    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, pH 4')
-    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+    ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, pH 4.0')
+    ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
 
     # 4HFI_7
     mean2 = meanList['4HFI_7']
     serr2 = serrList['4HFI_7']
-    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
-    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
+    ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, pH 7.0', edgecolor='w', lw=0, hatch='//', zorder=12)
+    ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=10)
 
     # 4HFI_4
     mean1 = meanList['4HFI_4']
     serr1 = serrList['4HFI_4']
-    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
-    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
+    ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
+    ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
 
     # ax.set_xticks(x, nameList, rotation=0, color='white')
-    ax.set_xticks([-0.3, -0.1, 0.1, 0.3], ['Closed\npH 7', 'Closed\npH 4', 'Open\npH 7', 'Open\npH 4'], rotation=0)
+    ax.set_xticks([-0.3, -0.1, 0.1, 0.3], ['Closed\npH 7.0', 'Closed\npH 4.0', 'Open\npH 7.0', 'Open\npH 4.0'], rotation=0, size=16)
+    
     # ax.legend(loc='best', prop={'size': 12})
 
     # plt.title(title)
     plt.ylim(ylim)
-    plt.ylabel(ylabel, size=19)
+    plt.ylabel(ylabel)
     plt.tight_layout()
     plt.savefig('bloom/{}'.format(fname))
     plt.clf()
@@ -111,7 +112,7 @@ def doPlot2(actual, xlabel, fname):
     """This function makes the histograms (left side of figure in Bergh21 paper).
     """
 
-    plt.figure(figsize=(9, 6))
+    plt.figure(figsize=(9, 6), dpi=300)
     maxval = []  # See below what this is used for.
 
     for sim in ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']:
@@ -159,21 +160,21 @@ def doPlot2(actual, xlabel, fname):
         plt.hist(values, bins, alpha=0.00)
 
         if sim == '4HFI_4':
-            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4', linestyle='--')
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='open, pH 4.0', linestyle='--')
             plt.fill_between(bins[1:], A, B, alpha=0.5, color='#9ebcda', hatch='\\\\', edgecolor='w', lw=1)
 
         if sim == '4HFI_7':
             plt.vlines(x=static4HFI[actual], ymin=0, ymax=10, color='black', label='open, crystal', linestyle='--')
-            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='open, pH 7', linestyle='--')
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='open, pH 7.0', linestyle='--')
             plt.fill_between(bins[1:], A, B, alpha=0.5, color='#8856a7', hatch='//',   edgecolor='w', lw=1)
 
         if sim == '6ZGD_4':
-            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='closed, pH 4')
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#9ebcda', label='closed, pH 4.0')
             plt.fill_between(bins[1:], A, B, alpha=0.5, color='#9ebcda')
 
         if sim == '6ZGD_7':
             plt.vlines(x=static6ZGD[actual], ymin=0, ymax=10, color='black', label='closed, cryoEM')
-            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='closed, pH 7')
+            plt.plot(bins[1:], meanList, linewidth=2,   color='#8856a7', label='closed, pH 7.0')
             plt.fill_between(bins[1:], A, B, alpha=0.5, color='#8856a7')
 
         maxval.append(max(A))
@@ -181,9 +182,11 @@ def doPlot2(actual, xlabel, fname):
     plt.ylim(0, max(maxval) * 1.05)
 
     #! REGULAR PLOTTING STUFF
-    plt.xlabel(xlabel, size=19)
-    plt.ylabel('Occupancy', size=19)
-    plt.legend(loc='best')
+    plt.xlabel(xlabel)
+    plt.ylabel('Probability density')
+    # plt.ylim(0, 1.7)
+    # plt.yticks([])
+    # plt.legend(loc='best')
     plt.tight_layout()
     plt.savefig('bloom/{}'.format(fname))
     plt.clf()
