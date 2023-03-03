@@ -3,7 +3,6 @@
 #? IMPORTS
 
 import pickle
-import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -13,7 +12,7 @@ from science.cphmd import theoreticalMicropKa
 
 #? PARAMETERS AND GLOBAL STUFF
 
-matplotlib.rcParams.update({'font.size': 20})
+matplotlib.rcParams.update({'font.size': 24})
 
 def stderr(array: list) -> float:
     return np.std(array) / np.sqrt(len(array))
@@ -119,7 +118,7 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
 
     if case == 'cat1':
         data  = cat1
-        nrows = 2
+        nrows = 1
 
     if case == 'cat2':
         data  = cat2
@@ -140,6 +139,10 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
 
     # Initialize multifigure object.
     ncols    = int(np.ceil(len(data) / nrows))
+
+    if case == 'cat2':
+        ncols = 11
+
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(1.8 * ncols, 4.5 * nrows), dpi=300)
 
     row = 0
@@ -161,28 +164,28 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
         # subplt.set_figheight(15)
         # subplt.set_figwidth(15)
 
-        mean4 = [protoMean['6ZGD_7'][data[idx]]]    # 6ZGD_7
+        mean4 = [protoMean['6ZGD_7'][data[idx]]]
         serr4 = [protoErr['6ZGD_7'][data[idx]]]
-        subplt.bar(     x - width * 1.5, mean4, width, color='#8856a7')  # 6ZGD_7
-        subplt.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2, zorder=1)
+        subplt.bar(     x - width * 1.5, mean4, width, color='#8856a7')
+        subplt.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
         # subplt.text(    x - width * 1.5 - 0.15, (mean4[0] + serr4[0]) + 0.01, f'{round(mean4[0], 2):.2f}', size=8)
 
-        mean3 = [protoMean['6ZGD_4'][data[idx]]]    # 6ZGD_4
+        mean3 = [protoMean['6ZGD_4'][data[idx]]]
         serr3 = [protoErr['6ZGD_4'][data[idx]]]
-        subplt.bar(     x - width / 2.0, mean3, width, color='#9ebcda')  # 6ZGD_4
-        subplt.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2, zorder=1)
+        subplt.bar(     x - width / 2.0, mean3, width, color='#9ebcda')
+        subplt.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
         # subplt.text(    x - width / 2.0 - 0.15, (mean3[0] + serr3[0]) + 0.01, f'{round(mean3[0], 2):.2f}', size=8)
 
-        mean2 = [protoMean['4HFI_7'][data[idx]]]    # 4HFI_7
+        mean2 = [protoMean['4HFI_7'][data[idx]]]
         serr2 = [protoErr['4HFI_7'][data[idx]]]
-        subplt.bar(     x + width / 2.0, mean2, width, color='#8856a7', edgecolor='w', lw=1, hatch='//')
-        subplt.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2, zorder=1)
+        subplt.bar(     x + width / 2.0, mean2, width, color='#8856a7', edgecolor='w', lw=0, hatch='//', zorder=13)
+        subplt.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=10)
         # subplt.text(    x + width / 2.0 - 0.15, (mean2[0] + serr2[0]) + 0.01, f'{round(mean2[0], 2):.2f}', size=8)
 
-        mean1 = [protoMean['4HFI_4'][data[idx]]]    # 4HFI_4
+        mean1 = [protoMean['4HFI_4'][data[idx]]]
         serr1 = [protoErr['4HFI_4'][data[idx]]]
-        subplt.bar(     x + width * 1.5, mean1, width, color='#9ebcda', edgecolor='w', lw=1, hatch='\\\\')
-        subplt.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2, zorder=1)
+        subplt.bar(     x + width * 1.5, mean1, width, color='#9ebcda', edgecolor='w', lw=0, hatch='\\\\', zorder=12)
+        subplt.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
         # subplt.text(    x + width * 1.5 - 0.15, (mean1[0] + serr1[0]) + 0.01, f'{round(mean1[0], 2):.2f}', size=8)
 
         # Disable x-ticks and set x-label.
@@ -191,7 +194,7 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
         subplt.set_xlabel(f'{letter}{data[idx]}')
 
         # Set y-lim.
-        subplt.set_ylim([0, 1.1])
+        subplt.set_ylim([0, 1.0])
 
         # Remove boxes around plots.
         for loc in ['top', 'right', 'bottom', 'left']:
@@ -227,8 +230,7 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
     # fig.legend(loc=[0.85, 0.06], prop={'size': 20})
 
     #* SAVE
-    fig.tight_layout()
+    fig.tight_layout(pad=0.8)
     fig.savefig(f'{outname}.png')
     fig.savefig(f'{outname}.eps')
     fig.clf()
-    os.system(f'convert {outname}.png -trim {outname}.png')
