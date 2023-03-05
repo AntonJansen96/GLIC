@@ -3,87 +3,73 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import MDAnalysis
 import pickle
 import os
 
 from science.parsing import loadCol
-from science.utility import triplet2letter
 
 # Set global font size for figures.
-matplotlib.rcParams.update({'font.size': 20})
+matplotlib.rcParams.update({'font.size': 24})
 
-# target   = 26
-# protoBar = True
-# include  = ['V79p', 'N80p', 'V81p']
-# legend   = True
+fullName = 'E26'
+protoBar = True
+include  = ['V79p', 'N80p', 'V81p']
 
 # target   = 75
 # protoBar = True
 # include  = ['R133', 'V90c']
-# legend   = True
 
 # target   = 82
 # protoBar = True
 # include  = ['K38c', 'T36']
-# legend   = True
 
 # target   = 104
 # protoBar = True
 # include  = ['R85']
-# legend   = True
 
 # target   = 136
 # protoBar = True
 # include  = ['T137', 'R138', 'R179']
-# legend   = True
 
 # LOOP C
 
 # target   = 177
 # protoBar = True
 # include  = ['R179', 'K148c']
-# legend   = True
 
 # target   = 178
 # protoBar = True
 # include  = ['E177', 'K148c']
-# legend   = True
 
 # target   = 181
 # protoBar = True
 # include  = ['R133', 'R179']
-# legend   = True
 
 # target   = 185
 # protoBar = True
 # include  = ['K183', 'I128']
-# legend   = True
 
 # target   = 32
 # protoBar = True
 # include  = ['R192', 'Y119']
-# legend   = True
 
 # target   = 35
 # protoBar = True
 # include  = ['L114', 'T158c', 'Na+']
-# legend   = True
 
 # target   = 122
 # protoBar = True
 # include  = ['R118', 'S123', 'D115', 'Q124', 'Y119']
-# legend   = True
 
 # target   = 243
 # protoBar = True
 # include  = ['K248', 'N200c']
-# legend   = True
 
 # target   = 222
 # protoBar = True
 # include  = ['Na+']
-# legend   = True
+
+target = int(fullName[1:])
 
 # superData holds four dictionaries: 4HFI_4, 4HFI_7, 6ZGD_4, 6ZGD_7.
 # Each of these dictionaries contains the following key-value pairs:
@@ -206,31 +192,18 @@ serrList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
 
 # First set of bars is protonation:
 if protoBar:
-    nameList.append('protonation')
     for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
         meanList[sim].append(np.mean(protoData[sim]))
         serrList[sim].append(np.std(protoData[sim]) / np.sqrt(len(protoData[sim])))
 
 # Gather occupancy data:
-count = 0
 for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
-    for key in superData[sim]:
+    for key in include:
+        meanList[sim].append(np.mean(superData[sim][key]))
+        serrList[sim].append(np.std(superData[sim][key]) / np.sqrt(len(superData[sim][key])))
 
-        if key in include:
-
-            if key == 'Na+':  # This is to prevent Na+ from showing up in the
-                continue      # middle of the bar plot if Na+ is in the top 5.
-
-            if sim == '4HFI_4':
-                nameList.append(key)
-
-            meanList[sim].append(np.mean(superData[sim][key]))
-            serrList[sim].append(np.std(superData[sim][key]) / np.sqrt(len(superData[sim][key])))
-
-        count += 1
-        if count == topNum:
-            count = 0
-            break
+        if sim == '4HFI_4':
+            nameList.append(key)
 
 if 'Na+' in include:
     # We always want Na+ as the final set of bars
@@ -243,61 +216,79 @@ if 'Na+' in include:
             meanList[sim].append(0.0)
             serrList[sim].append(0.0)
 
-# Some plotting stuff
-width = 0.2
-x     = np.arange(len(nameList))
-fig   = plt.figure(figsize=(8, 5))
-ax    = fig.add_subplot()
+#? #############################################################################
 
-# 6ZGD_7
+#! We always want four sets of contact bars
+
+for sim in sims:
+    while len(meanList[sim]) != 5:
+        meanList[sim].append(-1)
+        serrList[sim].append(0.05)
+
+f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 4.0]}, figsize=(10, 5), dpi=300)
+
+width = 0.20
+
 mean4 = meanList['6ZGD_7']
 serr4 = serrList['6ZGD_7']
-ax.bar(     x - width * 1.5, mean4, width, color='#8856a7', label='closed, pH 7')
-ax.errorbar(x - width * 1.5, mean4, serr4, color='#8856a7', fmt='none', capsize=6, linewidth=2)
-
-# 6ZGD_4
 mean3 = meanList['6ZGD_4']
 serr3 = serrList['6ZGD_4']
-ax.bar(     x - width / 2.0, mean3, width, color='#9ebcda', label='closed, pH 4')
-ax.errorbar(x - width / 2.0, mean3, serr3, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
-
-# 4HFI_7
 mean2 = meanList['4HFI_7']
 serr2 = serrList['4HFI_7']
-ax.bar(     x + width / 2.0, mean2, width, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
-ax.errorbar(x + width / 2.0, mean2, serr2, color='#8856a7', fmt='none', capsize=6, linewidth=2)
-
-# 4HFI_4
 mean1 = meanList['4HFI_4']
 serr1 = serrList['4HFI_4']
-ax.bar(     x + width * 1.5, mean1, width, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
-ax.errorbar(x + width * 1.5, mean1, serr1, color='#9ebcda', fmt='none', capsize=6, linewidth=2)
 
-ax.set_xticks(x, nameList)
+#! PROTONATION
 
-if legend:
-    ax.legend(prop={'size': 16})
+x = np.arange(1)
 
-# Vertical line to separate protonation bars from rest
-if protoBar:
-    plt.axvline(x=0.5, ymin=0, ymax=1.1, color='black', lw=2, linestyle=':')
+a0.bar(     x - width * 1.5, mean4[0], width, color='#8856a7', label='closed, pH 7.0')
+a0.errorbar(x - width * 1.5, mean4[0], serr4[0], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
 
-# Do the title
-u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
-triplet = u.select_atoms('chainID A and resid {}'.format(target)).residues.resnames[0]
-letter = triplet2letter(triplet)
-plt.title('Residue {}{}'.format(letter, target))
+a0.bar(     x - width / 2.0, mean3[0], width, color='#9ebcda', label='closed, pH 4.0')
+a0.errorbar(x - width / 2.0, mean3[0], serr3[0], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
 
-plt.ylim(0, 1.1)
+a0.bar(     x + width / 2.0, mean2[0], width, color='#8856a7', label='open, pH 7.0', edgecolor='w', lw=0, hatch='//', zorder=12)
+a0.errorbar(x + width / 2.0, mean2[0], serr2[0], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
 
-if protoBar:
-    plt.ylabel('Protonation / contact occupancy')
-else:
-    plt.ylabel('Contact occupancy')
+a0.bar(     x + width * 1.5, mean1[0], width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
+a0.errorbar(x + width * 1.5, mean1[0], serr1[0], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
 
-plt.tight_layout()
-fname = f'contacts/{target}_custom.png'
-plt.savefig(fname)
-os.system(f'convert {fname} -trim {fname}')
+a0.set_xticks(x, [fullName])
+a0.set_ylim(0, 1)
+a0.set_ylabel('Protonation')
+
+#! CONTACTS
+
+x = np.arange(4)
+
+a1.bar(     x - width * 1.5, mean4[1:], width, color='#8856a7', label='closed, pH 7.0')
+a1.errorbar(x - width * 1.5, mean4[1:], serr4[1:], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
+
+a1.bar(     x - width / 2.0, mean3[1:], width, color='#9ebcda', label='closed, pH 4.0')
+a1.errorbar(x - width / 2.0, mean3[1:], serr3[1:], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
+
+a1.bar(     x + width / 2.0, mean2[1:], width, color='#8856a7', label='open, pH 7.0', edgecolor='w', lw=0, hatch='//', zorder=12)
+a1.errorbar(x + width / 2.0, mean2[1:], serr2[1:], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
+
+a1.bar(     x + width * 1.5, mean1[1:], width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
+a1.errorbar(x + width * 1.5, mean1[1:], serr1[1:], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
+
+if len(nameList) == 2:
+    a1.set_xticks(x[0:-2], nameList)
+
+if len(nameList) == 3:
+    a1.set_xticks(x[0:-1], nameList)
+
+if len(nameList) == 4:
+    a1.set_xticks(x, nameList)
+
+print(nameList)
+
+a1.set_ylim(0, 1)
+a1.set_ylabel('Contact Occupancy')
+
+# plt.legend(prop={'size': 16})
+plt.tight_layout(pad=0.8)
+plt.savefig(f'custom/{target}.png')
 plt.clf()
-plt.close()
