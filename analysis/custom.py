@@ -4,11 +4,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import os
 
 from science.parsing import loadCol
 
 # Set global font size for figures.
-matplotlib.rcParams.update({'font.size': 24})
+matplotlib.rcParams.update({'font.size': 26})
 
 combs = [('E26', ['V79p', 'N80p', 'V81p']), ('E82', ['T36', 'K38c']), ('E177', ['K148c', 'R179']), ('D178', ['K148c', 'E177']), ('D32', ['Y119', 'R192']), ('E35', ['L114', 'T158c', 'Na+']), ('D122', ['R118', 'S123', 'D115']), ('E243', ['N200c', 'K248']), ('E222', ['Na+'])]
 
@@ -173,7 +174,7 @@ for comb in combs:
     #! This is a suggestion from Erik to make contact legend more clear.
 
     for idx in range(0, len(nameList)):
-        nameList[idx] = fullName + '-' + nameList[idx]
+        nameList[idx] = nameList[idx]
 
     f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3.7]}, figsize=(10, 5), dpi=300)
 
@@ -225,10 +226,10 @@ for comb in combs:
     a1.errorbar(x + width * 1.5, mean1[1:], serr1[1:], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
 
     if len(nameList) == 2:
-        a1.set_xticks(x[0:-1], nameList, size=19)
+        a1.set_xticks(x[0:-1], nameList)
 
     if len(nameList) == 3:
-        a1.set_xticks(x, nameList, size=19)
+        a1.set_xticks(x, nameList)
 
     a1.set_ylim(0, 1)
     a1.set_ylabel('Occupancy')
@@ -236,4 +237,5 @@ for comb in combs:
     # plt.legend(prop={'size': 16})
     plt.tight_layout(pad=0.8)
     plt.savefig(f'custom/{target}.png')
+    os.system(f'convert custom/{target}.png -trim custom/{target}.png')
     plt.clf()

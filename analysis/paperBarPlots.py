@@ -141,7 +141,7 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
     ncols    = int(np.ceil(len(data) / nrows))
 
     if case == 'cat2':
-        ncols = 11
+        ncols = 9
 
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(1.8 * ncols, 4.5 * nrows), dpi=300)
 
@@ -232,5 +232,4 @@ for case in ['cat1', 'cat2', 'cat3', 'cat4']:
     #* SAVE
     fig.tight_layout(pad=0.8)
     fig.savefig(f'{outname}.png')
-    fig.savefig(f'{outname}.eps')
     fig.clf()

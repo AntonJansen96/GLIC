@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from science.cphmd import theoreticalProtonation
 from science.utility import makeSuperDict
 
-matplotlib.rcParams.update({'font.size': 20})
+matplotlib.rcParams.update({'font.size': 24})
 
 sims     = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 resnames = ['ASP', 'GLU', 'HIS']
@@ -68,7 +68,7 @@ for idx in range(0, len(data)):
     subplt.set_xlabel(['ASP', 'GLU', 'HIS'][idx])
 
     # Set y-lim.
-    subplt.set_ylim([0, 1.1])
+    subplt.set_ylim([0, 1.0])
 
     # Remove boxes around plots.
     for loc in ['top', 'right', 'bottom', 'left']:
@@ -101,11 +101,10 @@ subplt.bar(0, 0, 0, color='#8856a7', label='pH 7.0')
 subplt.bar(0, 0, 0, color='#9ebcda', label='pH 4.0')
 # subplt.bar(0, 0, 0, color='#8856a7', label='open, pH 7', edgecolor='w', lw=1, hatch='//')
 # subplt.bar(0, 0, 0, color='#9ebcda', label='open, pH 4', edgecolor='w', lw=1, hatch='\\\\')
-fig.legend(loc=[0.25, 0.65])
+fig.legend(loc=[0.30, 0.63])
 
 #* SAVE
 # fig.legend()
-fig.tight_layout()
+fig.tight_layout(pad=0.8)
 fig.savefig(f'{outname}.png')
-fig.savefig(f'{outname}.eps')
 fig.clf()
