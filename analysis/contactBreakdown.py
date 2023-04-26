@@ -5,6 +5,7 @@ import multiprocessing as mp
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import os
 
 from science.utility import createIndexFile
 from science.utility import gromacs
@@ -15,20 +16,17 @@ matplotlib.rcParams.update({'font.size': 18})
 
 if __name__ == "__main__":
 
-    # array = [
-    #     ['E26', 'V79p'],
-    #     ['E26', 'N80p'],
-    #     ['E26', 'V81p'],
-    #     ['E177', 'R179'],
-    #     ['E177', 'K148c'],
-    #     ['D178', 'E177'],
-    #     ['E181', 'R179'],
-    #     ['E181', 'R133'],
-    #     ['D185', 'I128'],
-    #     ['E243', 'N200c'],
-    #     ['E243', 'N245c']
-    # ]
-    array = [['D185', 'K183']]
+    array = [
+        ['E104', 'Y102'], ['E104', 'R85'],
+        ['D145', 'L146'],
+        ['D154', 'N152'], ['D154', 'D153'],
+        ['E163', 'S191'], ['E163', 'R189'], ['E163', 'D161'],
+        ['H235', 'I259'], ['H235', 'N239'], ['H235', 'Y263'],
+        ['E243', 'K248'], ['E243', 'N245c'], ['E243', 'N200c'],
+        ['E272', 'S295'], ['E272', 'Q276'], ['E272', 'V273'],
+        ['H277', 'T219c'], ['H277', 'S218c'], ['H277', 'S220c'],
+        ['E282', 'Y278']
+    ]
 
     for comb in array:
 
@@ -64,13 +62,15 @@ if __name__ == "__main__":
 
         #! Task for multithreading.
         def task(p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1IDX, chain2IDX, name):
-            createIndexFile(p1, indexFileName, [sel1, sel2])
+            if not os.path.exists(indexFileName):
+                createIndexFile(p1, indexFileName, [sel1, sel2])
 
             # Loop over each replica and run GROMACS mindist
             for rep in reps:
                 p2 = f'../sims/{sim}/{rep:02d}/MD_conv.xtc'
                 xvgFileName = f'backbone/{sim}_{rep}_{fullResidueName}_{fullTargetName}_{chain1IDX}{chain2IDX}_{name}.xvg'
-                gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
+                if not os.path.exists(xvgFileName):
+                    gromacs(f'mindist -s {p1} -f {p2} -n {indexFileName} -od {xvgFileName}', stdin=[0, 1])
 
         #! Gather iterables.
         items = []
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                     items.append((p1, indexFileName, sel1, sel2, reps, sim, fullResidueName, fullTargetName, chain1[idx], chain2[idx], name))
 
         #! Run multithreaded.
-        pool = mp.Pool(processes=mp.cpu_count())
+        pool = mp.Pool(processes=8)
         pool.starmap(task, items, chunksize=1)
 
         #? Gather data and process.
@@ -153,16 +153,19 @@ if __name__ == "__main__":
             file.write('\n')
 
         # Make barplot.
-        plotNames = ['BB (atoms N, O)']
+        plotNames = ['BB(NH)', 'BB(O)']
         for name in names:
             if name not in ['N', 'O']:  # not in BB
-                plotNames.append(f'atom {name}')
+                plotNames.append(f'{name}')
 
-        plotData = makeSuperDict([sims, [0]])
+        plotData = makeSuperDict([sims, [0, 0]])
+
         for sim in sims:
             for name in names:
-                if name in ['N', 'O']:
+                if name == 'N':
                     plotData[sim][0] += superDataPercent[sim][name]
+                elif name == 'O':
+                    plotData[sim][1] += superDataPercent[sim][name]
                 else:
                     plotData[sim].append(superDataPercent[sim][name])
 
