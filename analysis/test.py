@@ -11,9 +11,7 @@ matplotlib.rcParams.update({'font.size': 26})
 # PARAMETERS #############################################################################
 
 sims = ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']
-# sims = ['6ZGD_7']
-residue = 35
-
+residue = 122
 
 #? GET TOP-4 MOST OCCUPIED CONTACTS ######################################################
 
@@ -111,9 +109,7 @@ for identifier in top4:
         mean4Labels[jj][ii] = key
         jj += 1
     ii += 1
-# print(' ')          # debug.
-# print(mean4)        # debug.
-print(mean4Labels)  # debug.
+# print(mean4)  # debug.
 
 #* 6ZGD_4
 maxAtoms = 0  # Maximum number of atoms any given residue contacts.
@@ -175,7 +171,7 @@ for identifier in top4:
     ii += 1
 # print(mean1)  # debug.
 
-#? TESTDATA ##############################################################################
+#? TEST DATA #############################################################################
 
 # top4 = ['K248', 'R33', 'R177', 'R18']
 # atoms = ['C', 'N', 'OH1']
@@ -204,14 +200,11 @@ for identifier in top4:
 #     [0.00, 0.00, 0.13, 0.00]
 # ]
 
-##########################################################################################
-# PLOTTING
-
 f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3.7]}, figsize=(18, 5), dpi=200)
 
-width = 0.20
+width = 0.22
 
-#! PROTONATION ###########################################################################
+#! PLOTTING / PROTONATION ################################################################
 
 x = np.arange(1)
 
@@ -253,7 +246,7 @@ a0.set_xticks(x, [residue])
 a0.set_ylim(0, 1)
 a0.set_ylabel('Protonation')
 
-#! CONTACTS ##############################################################################
+#! PLOTTING / CONTACTS ###################################################################
 
 x = np.arange(4)
 
@@ -263,7 +256,8 @@ bottom = np.zeros(4)
 for weight in mean4:
     a1.bar(x - width * 1.5, weight, width, color='#8856a7', lw=1.5, edgecolor='white', bottom=bottom)
     for idx in range(0, len(x)):
-        a1.text(x[idx] - width * 1.5 - 0.095, bottom[idx] + 0.01, mean4Labels[ii][idx], size=18, color='w')
+        if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
+            a1.text(x[idx] - width * 1.5 - 0.095, bottom[idx] + 0.01, mean4Labels[ii][idx], size=19, color='w')
     bottom += weight
     ii += 1
 
@@ -273,7 +267,8 @@ bottom = np.zeros(4)
 for weight in mean3:
     a1.bar(x - width / 2.0, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', bottom=bottom)
     for idx in range(0, len(x)):
-        a1.text(x[idx] - width / 2.0 - 0.095, bottom[idx] + 0.01, mean3Labels[ii][idx], size=18, color='w')
+        if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
+            a1.text(x[idx] - width / 2.0 - 0.095, bottom[idx] + 0.01, mean3Labels[ii][idx], size=19, color='w')
     bottom += weight
     ii += 1
 
@@ -283,7 +278,8 @@ bottom = np.zeros(4)
 for weight in mean2:
     a1.bar(x + width / 2.0, weight, width, color='#8856a7', lw=1.5, edgecolor='white', hatch='//', bottom=bottom)
     for idx in range(0, len(x)):
-        a1.text(x[idx] + width / 2.0 - 0.095, bottom[idx] + 0.01, mean2Labels[ii][idx], size=18, color='w')
+        if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
+            a1.text(x[idx] + width / 2.0 - 0.095, bottom[idx] + 0.01, mean2Labels[ii][idx], size=19, color='w')
     bottom += weight
     ii += 1
 
@@ -293,7 +289,8 @@ bottom = np.zeros(4)
 for weight in mean1:
     a1.bar(x + width * 1.5, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', hatch='\\\\', bottom=bottom)
     for idx in range(0, len(x)):
-        a1.text(x[idx] + width * 1.5 - 0.095, bottom[idx] + 0.01, mean1Labels[ii][idx], size=18, color='w')
+        if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
+            a1.text(x[idx] + width * 1.5 - 0.095, bottom[idx] + 0.01, mean1Labels[ii][idx], size=19, color='w')
     bottom += weight
     ii += 1
 
@@ -301,6 +298,6 @@ a1.set_xticks(x, top4)
 a1.set_ylim(0, 1)
 a1.set_ylabel('Occupancy')
 
-plt.tight_layout(pad=0.8)
+plt.tight_layout(pad=0.4)
 plt.savefig('test.png')
 plt.clf()
