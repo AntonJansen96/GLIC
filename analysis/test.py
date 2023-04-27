@@ -50,7 +50,7 @@ for sim in sims:
                     file.seek(0)
                     break
 
-print(meanList)  # debug.
+# print(meanList)  # debug.
 
 #? GET THE MEAN ATOM OCCUPANCIES FOR THE TOP-4 CONTACTS FOR ALL 4 SIMS ###################
 
@@ -89,7 +89,7 @@ for sim in sims:
         for key in atomDict[sim][top4[idx]]:
             atomDict[sim][top4[idx]][key] *= globalMean
 
-print(atomDict)  # debug
+# print(atomDict)  # debug
 
 #? FORMAT TO WHAT THE INPUT LIST OF LISTS SHOULD LOOK LIKE ###############################
 
@@ -101,15 +101,19 @@ for identifier in top4:
         maxAtoms = L
 
 mean4 = [[0, 0, 0, 0] for _ in range(maxAtoms)]
+mean4Labels = [['', '', '', ''] for _ in range(maxAtoms)]
 ii = 0
 for identifier in top4:
     jj = 0
     for key in atomDict['6ZGD_7'][identifier]:
         num = atomDict['6ZGD_7'][identifier][key]
         mean4[jj][ii] = num
+        mean4Labels[jj][ii] = key
         jj += 1
     ii += 1
-# print(mean4)  # debug.
+# print(' ')          # debug.
+# print(mean4)        # debug.
+print(mean4Labels)  # debug.
 
 #* 6ZGD_4
 maxAtoms = 0  # Maximum number of atoms any given residue contacts.
@@ -119,12 +123,14 @@ for identifier in top4:
         maxAtoms = L
 
 mean3 = [[0, 0, 0, 0] for _ in range(maxAtoms)]
+mean3Labels = [['', '', '', ''] for _ in range(maxAtoms)]
 ii = 0
 for identifier in top4:
     jj = 0
     for key in atomDict['6ZGD_4'][identifier]:
         num = atomDict['6ZGD_4'][identifier][key]
         mean3[jj][ii] = num
+        mean3Labels[jj][ii] = key
         jj += 1
     ii += 1
 # print(mean4)  # debug.
@@ -137,12 +143,14 @@ for identifier in top4:
         maxAtoms = L
 
 mean2 = [[0, 0, 0, 0] for _ in range(maxAtoms)]
+mean2Labels = [['', '', '', ''] for _ in range(maxAtoms)]
 ii = 0
 for identifier in top4:
     jj = 0
     for key in atomDict['4HFI_7'][identifier]:
         num = atomDict['4HFI_7'][identifier][key]
         mean2[jj][ii] = num
+        mean2Labels[jj][ii] = key
         jj += 1
     ii += 1
 # print(mean2)  # debug.
@@ -155,21 +163,22 @@ for identifier in top4:
         maxAtoms = L
 
 mean1 = [[0, 0, 0, 0] for _ in range(maxAtoms)]
+mean1Labels = [['', '', '', ''] for _ in range(maxAtoms)]
 ii = 0
 for identifier in top4:
     jj = 0
     for key in atomDict['4HFI_4'][identifier]:
         num = atomDict['4HFI_4'][identifier][key]
         mean1[jj][ii] = num
+        mean1Labels[jj][ii] = key
         jj += 1
     ii += 1
 # print(mean1)  # debug.
 
-##########################################################################################
-# TEST DATA
+#? TESTDATA ##############################################################################
 
 # top4 = ['K248', 'R33', 'R177', 'R18']
-atoms = ['C', 'N', 'OH1']
+# atoms = ['C', 'N', 'OH1']
 
 # mean4 = [
 #     [0.13, 0.85, 0.25, 0.53],
@@ -198,7 +207,7 @@ atoms = ['C', 'N', 'OH1']
 ##########################################################################################
 # PLOTTING
 
-f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3.7]}, figsize=(11, 5), dpi=200)
+f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3.7]}, figsize=(18, 5), dpi=200)
 
 width = 0.20
 
@@ -249,30 +258,44 @@ a0.set_ylabel('Protonation')
 x = np.arange(4)
 
 # 6ZGD_7
+ii = 0
 bottom = np.zeros(4)
 for weight in mean4:
     a1.bar(x - width * 1.5, weight, width, color='#8856a7', lw=1.5, edgecolor='white', bottom=bottom)
-    # for idx in range(0, len(x)):
-    #     a1.text(x[idx] - width * 1.5 - 0.065, bottom[idx], atoms[0], size=18)
+    for idx in range(0, len(x)):
+        a1.text(x[idx] - width * 1.5 - 0.095, bottom[idx] + 0.01, mean4Labels[ii][idx], size=18, color='w')
     bottom += weight
+    ii += 1
 
 # 6ZGD_4
+ii = 0
 bottom = np.zeros(4)
 for weight in mean3:
     a1.bar(x - width / 2.0, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', bottom=bottom)
+    for idx in range(0, len(x)):
+        a1.text(x[idx] - width / 2.0 - 0.095, bottom[idx] + 0.01, mean3Labels[ii][idx], size=18, color='w')
     bottom += weight
+    ii += 1
 
 # 4HFI_7
+ii = 0
 bottom = np.zeros(4)
 for weight in mean2:
     a1.bar(x + width / 2.0, weight, width, color='#8856a7', lw=1.5, edgecolor='white', hatch='//', bottom=bottom)
+    for idx in range(0, len(x)):
+        a1.text(x[idx] + width / 2.0 - 0.095, bottom[idx] + 0.01, mean2Labels[ii][idx], size=18, color='w')
     bottom += weight
+    ii += 1
 
 # 4HFI_4
+ii = 0
 bottom = np.zeros(4)
 for weight in mean1:
     a1.bar(x + width * 1.5, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', hatch='\\\\', bottom=bottom)
+    for idx in range(0, len(x)):
+        a1.text(x[idx] + width * 1.5 - 0.095, bottom[idx] + 0.01, mean1Labels[ii][idx], size=18, color='w')
     bottom += weight
+    ii += 1
 
 a1.set_xticks(x, top4)
 a1.set_ylim(0, 1)
