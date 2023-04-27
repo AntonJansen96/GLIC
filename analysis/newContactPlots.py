@@ -4,6 +4,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import MDAnalysis
+from science.utility import triplet2letter
 from science.utility import makeSuperDict
 
 matplotlib.rcParams.update({'font.size': 26})
@@ -45,8 +47,13 @@ for residue in residues:
         with open(f"newcontacts/{sim}_{residue}.txt", 'r') as file:
             for identifier in top4:
                 for line in file.read().splitlines():
-                    if line.split()[0] == identifier:
-                        meanList[sim].append(float(line.split()[1]))
+                    try:
+                        if line.split()[0] == identifier:
+                            meanList[sim].append(float(line.split()[1]))
+                            file.seek(0)
+                            break
+                    except IndexError:
+                        meanList[sim].append(0.0)
                         file.seek(0)
                         break
 
@@ -75,7 +82,10 @@ for residue in residues:
             total = 0
             for key in atomDict[sim][identifier]:
                 total += atomDict[sim][identifier][key]
-            factor = 1.0 / total
+            if total == 0:
+                factor = 0
+            else:
+                factor = 1.0 / total
             for key in atomDict[sim][identifier]:
                 atomDict[sim][identifier][key] *= factor
 
@@ -240,9 +250,9 @@ for residue in residues:
     a0.bar(     x + width * 1.5, m1, width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
     a0.errorbar(x + width * 1.5, m1, s1, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
 
-    # u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
-    # resname = u.select_atoms(f"chainID A and resid {residue}").residues.resnames[0]
-    # resname = triplet2letter(resname) + str(residue)
+    u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
+    resname = u.select_atoms(f"chainID A and resid {residue}").residues.resnames[0]
+    resname = triplet2letter(resname) + str(residue)
     a0.set_xticks(x, [residue])
 
     a0.set_ylim(0, 1)
@@ -303,3 +313,4 @@ for residue in residues:
     plt.tight_layout(pad=0.4)
     plt.savefig(f'newcontacts/{residue}.png')
     plt.clf()
+    plt.close()
