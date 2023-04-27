@@ -15,6 +15,13 @@ matplotlib.rcParams.update({'font.size': 26})
 sims = ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']
 residues = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]
 
+#? HACK: load standard errors from earlier analysis and use here.
+serrDict = pickle.load(open('./temp.p', 'rb'))
+for residue in residues:
+    for sim in sims:
+        serrDict[residue][sim] = serrDict[residue][sim][:4]
+#? End of hack.
+
 for residue in residues:
 
     #? GET TOP-4 MOST OCCUPIED CONTACTS ##################################################
@@ -253,12 +260,17 @@ for residue in residues:
     u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
     resname = u.select_atoms(f"chainID A and resid {residue}").residues.resnames[0]
     resname = triplet2letter(resname) + str(residue)
-    a0.set_xticks(x, [residue])
+    a0.set_xticks(x, [resname])
 
     a0.set_ylim(0, 1)
     a0.set_ylabel('Protonation')
 
     #! PLOTTING / CONTACTS ###############################################################
+
+    serr4 = serrDict[residue]['6ZGD_7']
+    serr3 = serrDict[residue]['6ZGD_4']
+    serr2 = serrDict[residue]['4HFI_7']
+    serr1 = serrDict[residue]['4HFI_4']
 
     x = np.arange(4)
 
@@ -266,45 +278,49 @@ for residue in residues:
     ii = 0
     bottom = np.zeros(4)
     for weight in mean4:
-        a1.bar(x - width * 1.5, weight, width, color='#8856a7', lw=1.5, edgecolor='white', bottom=bottom)
+        a1.bar(x - width * 1.5, weight, width, color='#8856a7', lw=1.5, edgecolor='white', bottom=bottom, zorder=2)
         for idx in range(0, len(x)):
             if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
-                a1.text(x[idx] - width * 1.5 - 0.095, bottom[idx] + 0.01, mean4Labels[ii][idx], size=19, color='w')
+                a1.text(x[idx] - width * 1.5 - 0.095, bottom[idx] + 0.01, mean4Labels[ii][idx], size=19, color='w', zorder=3)
         bottom += weight
         ii += 1
+    a1.errorbar(x - width * 1.5, meanList['6ZGD_7'], serr4, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=1)
 
     # 6ZGD_4
     ii = 0
     bottom = np.zeros(4)
     for weight in mean3:
-        a1.bar(x - width / 2.0, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', bottom=bottom)
+        a1.bar(x - width / 2.0, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', bottom=bottom, zorder=2)
         for idx in range(0, len(x)):
             if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
-                a1.text(x[idx] - width / 2.0 - 0.095, bottom[idx] + 0.01, mean3Labels[ii][idx], size=19, color='w')
+                a1.text(x[idx] - width / 2.0 - 0.095, bottom[idx] + 0.01, mean3Labels[ii][idx], size=19, color='w', zorder=3)
         bottom += weight
         ii += 1
+    a1.errorbar(x - width / 2.0, meanList['6ZGD_4'], serr3, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=1)
 
     # 4HFI_7
     ii = 0
     bottom = np.zeros(4)
     for weight in mean2:
-        a1.bar(x + width / 2.0, weight, width, color='#8856a7', lw=1.5, edgecolor='white', hatch='//', bottom=bottom)
+        a1.bar(x + width / 2.0, weight, width, color='#8856a7', lw=1.5, edgecolor='white', hatch='//', bottom=bottom, zorder=2)
         for idx in range(0, len(x)):
             if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
-                a1.text(x[idx] + width / 2.0 - 0.095, bottom[idx] + 0.01, mean2Labels[ii][idx], size=19, color='w')
+                a1.text(x[idx] + width / 2.0 - 0.095, bottom[idx] + 0.01, mean2Labels[ii][idx], size=19, color='w', zorder=3)
         bottom += weight
         ii += 1
+    a1.errorbar(x + width / 2.0, meanList['4HFI_7'], serr2, color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=1)
 
     # 4HFI_4
     ii = 0
     bottom = np.zeros(4)
     for weight in mean1:
-        a1.bar(x + width * 1.5, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', hatch='\\\\', bottom=bottom)
+        a1.bar(x + width * 1.5, weight, width, color='#9ebcda', lw=1.5, edgecolor='white', hatch='\\\\', bottom=bottom, zorder=2)
         for idx in range(0, len(x)):
             if weight[idx] > 0.05:  # This if-statement prevent plotting a label when the difference is very small.
-                a1.text(x[idx] + width * 1.5 - 0.095, bottom[idx] + 0.01, mean1Labels[ii][idx], size=19, color='w')
+                a1.text(x[idx] + width * 1.5 - 0.095, bottom[idx] + 0.01, mean1Labels[ii][idx], size=19, color='w', zorder=3)
         bottom += weight
         ii += 1
+    a1.errorbar(x + width * 1.5, meanList['4HFI_4'], serr1, color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=1)
 
     a1.set_xticks(x, top4)
     a1.set_ylim(0, 1)
