@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import numpy as np
-import pickle
 import MDAnalysis
 import multiprocessing as mp
-import matplotlib
-import matplotlib.pyplot as plt
 from science.utility import triplet2letter
-
-matplotlib.rcParams.update({'font.size': 26})
 
 # PARAMETERS #############################################################################
 
@@ -112,132 +106,5 @@ for residue in residues:
         items.append((residue, sim))
 
 # Run multithreaded
-# pool = mp.Pool(processes=mp.cpu_count())
-# pool.starmap(task, items, chunksize=1)
-
-##########################################################################################
-
-protoMean = pickle.load(open('paperBarPlots.obj', 'rb'))
-
-for residue in [35]:
-
-    protoData = {'4HFI_4': protoMean['4HFI_4'][residue], '4HFI_7': protoMean['4HFI_7'][residue], '6ZGD_4': protoMean['6ZGD_4'][residue], '6ZGD_7': protoMean['6ZGD_7'][residue]}
-
-    contacts = {}
-    for sim in sims:
-        with open(f"newcontacts/{sim}_{residue}.txt", 'r') as file:
-            for line in file.read().splitlines():
-                if line == '':
-                    break
-
-                identifier = line.split()[0]
-                occupancy  = float(line.split()[1])
-
-                if identifier not in contacts:
-                    contacts[identifier] = occupancy
-                else:
-                    contacts[identifier] += occupancy
-
-    # Get the identifiers of the top 4 most occupied residues
-    top4 = [key for key in dict(sorted(contacts.items(), key=lambda item: item[1], reverse=True))][:4]
-
-    print(top4)
-
-    ######################################################################################
-    # FILL meanList. First element is protonation, last 4 elements are contacts.
-
-    meanList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
-    serrList = {'4HFI_4': [], '4HFI_7': [], '6ZGD_4': [], '6ZGD_7': []}
-
-    for sim in sims:
-        meanList[sim].append(np.mean(protoData[sim]))
-        serrList[sim].append(np.std(protoData[sim]) / np.sqrt(len(protoData[sim])))
-
-    for sim in sims:
-        with open(f"newcontacts/{sim}_{residue}.txt", 'r') as file:
-            for identifier in top4:
-                for line in file.read().splitlines():
-                    if line.split()[0] == identifier:
-                        meanList[sim].append(float(line.split()[1]))
-                        file.seek(0)
-                        break
-
-    ######################################################################################
-    # PLOTTING
-
-    f, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3.7]}, figsize=(11, 5), dpi=200)
-
-    width = 0.20
-
-    mean4 = meanList['6ZGD_7']
-    serr4 = serrList['6ZGD_7']
-    mean3 = meanList['6ZGD_4']
-    serr3 = serrList['6ZGD_4']
-    mean2 = meanList['4HFI_7']
-    serr2 = serrList['4HFI_7']
-    mean1 = meanList['4HFI_4']
-    serr1 = serrList['4HFI_4']
-
-    #! PROTONATION
-
-    x = np.arange(1)
-
-    a0.bar(     x - width * 1.5, mean4[0], width, color='#8856a7', label='closed, pH 7.0')
-    a0.errorbar(x - width * 1.5, mean4[0], serr4[0], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
-
-    a0.bar(     x - width / 2.0, mean3[0], width, color='#9ebcda', label='closed, pH 4.0')
-    a0.errorbar(x - width / 2.0, mean3[0], serr3[0], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
-
-    a0.bar(     x + width / 2.0, mean2[0], width, color='#8856a7', label='open, pH 7.0', edgecolor='w', lw=0, hatch='//', zorder=12)
-    a0.errorbar(x + width / 2.0, mean2[0], serr2[0], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
-
-    a0.bar(     x + width * 1.5, mean1[0], width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
-    a0.errorbar(x + width * 1.5, mean1[0], serr1[0], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
-
-    # u = MDAnalysis.Universe('../sims/4HFI_4/01/CA.pdb')
-    # resname = u.select_atoms(f"chainID A and resid {residue}").residues.resnames[0]
-    # resname = triplet2letter(resname) + str(residue)
-    a0.set_xticks(x, [residue])
-
-    a0.set_ylim(0, 1)
-    a0.set_ylabel('Protonation')
-
-    #! CONTACTS
-
-    x = np.arange(4)
-
-    a1.bar(     x - width * 1.5, mean4[1:], width, color='#8856a7', label='closed, pH 7.0')
-    # a1.errorbar(x - width * 1.5, mean4[1:], serr4[1:], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
-    a1.text((0 - width * 1.5 - 0.065), 0.02, "test1", rotation=90, size=18)
-    a1.text((1 - width * 1.5 - 0.065), 0.02, "test2", rotation=90, size=18)
-    a1.text((2 - width * 1.5 - 0.065), 0.02, "test3", rotation=90, size=18, zorder=20)
-    a1.text((3 - width * 1.5 - 0.065), 0.02, "test4", rotation=90, size=18, zorder=20)
-
-    a1.bar(     x - width / 2.0, mean3[1:], width, color='#9ebcda', label='closed, pH 4.0')
-    # a1.errorbar(x - width / 2.0, mean3[1:], serr3[1:], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2)
-    a1.text((0 - width / 2.0 - 0.065), 0.02, "test5", rotation=90, size=18)
-    a1.text((1 - width / 2.0 - 0.065), 0.02, "test6", rotation=90, size=18)
-    a1.text((2 - width / 2.0 - 0.065), 0.02, "test7", rotation=90, size=18, zorder=20)
-    a1.text((3 - width / 2.0 - 0.065), 0.02, "test8", rotation=90, size=18, zorder=20)
-
-    a1.bar(     x + width / 2.0, mean2[1:], width, color='#8856a7', label='open, pH 7.0', edgecolor='w', lw=0, hatch='//', zorder=12)
-    # a1.errorbar(x + width / 2.0, mean2[1:], serr2[1:], color='#8856a7', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=11)
-    a1.text((0 + width / 2.0 - 0.065), 0.02, "test9", rotation=90, size=18)
-    a1.text((1 + width / 2.0 - 0.065), 0.02, "test10", rotation=90, size=18)
-    a1.text((2 + width / 2.0 - 0.065), 0.02, "test11", rotation=90, size=18, zorder=20)
-    a1.text((3 + width / 2.0 - 0.065), 0.02, "test12", rotation=90, size=18, zorder=20)
-
-    a1.bar(     x + width * 1.5, mean1[1:], width, color='#9ebcda', label='open, pH 4.0', edgecolor='w', lw=0, hatch='\\\\', zorder=13)
-    # a1.errorbar(x + width * 1.5, mean1[1:], serr1[1:], color='#9ebcda', fmt='none', capsize=7, linewidth=3, markeredgewidth=2, zorder=12)
-    a1.text((0 + width * 1.5 - 0.065), 0.02, "test13", rotation=90, size=18)
-    a1.text((1 + width * 1.5 - 0.065), 0.02, "test14", rotation=90, size=18)
-    a1.text((2 + width * 1.5 - 0.065), 0.02, "test15", rotation=90, size=18, zorder=20)
-    a1.text((3 + width * 1.5 - 0.065), 0.02, "test16", rotation=90, size=18, zorder=20)
-
-    a1.set_xticks(x, top4)
-    a1.set_ylim(0, 1)
-    a1.set_ylabel('Occupancy')
-
-    plt.tight_layout(pad=0.8)
-    plt.savefig(f'newcontacts/{residue}.png')
-    plt.clf()
+pool = mp.Pool(processes=mp.cpu_count())
+pool.starmap(task, items, chunksize=1)
