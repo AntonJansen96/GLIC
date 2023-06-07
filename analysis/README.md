@@ -57,6 +57,13 @@
 * Helper file for identiying what kind of selections MDAnalysis makes.
 * This was used to do some debugging for `contactData.py`.
 
+`newContactData.py`
+* Experimental new high performance contacts analysis (including split per (BB/SC) atoms).
+* Associated with the directory `newcontacts`.
+
+`newContactPlots.py`
+* Associated with the directory `newcontacts`.
+
 `paperBarPlots.py`
 * Creates a global protonation plot as well as custom contact bar plots for the paper.
 * Requires prior running of `contactData.py` as it needs the `contacts/xxx` files.
