@@ -8,8 +8,8 @@ import os
 for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
     for rep in [1, 2, 3, 4]:
 
-        path1 = '../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
-        path2 = '../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
+        path1 = '../../sims/{}/{:02d}/CA.pdb'.format(sim, rep)
+        path2 = '../../sims/{}/{:02d}/MD_conv.xtc'.format(sim, rep)
         u = MDAnalysis.Universe(path1, path2)
 
         for seg in ['A', 'B', 'C', 'D', 'E']:
