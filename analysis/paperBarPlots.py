@@ -23,7 +23,7 @@ residues = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104,
 
 #? LOAD DATA FROM PICKLE OBJECT
 
-protoMean = pickle.load(open('paperBarPlots.obj', 'rb'))
+protoMean = pickle.load(open('/home/anton/GIT/GLIC/analysis/paperBarPlots.obj', 'rb'))
 protoErr = makeSuperDict([sims, residues, 0])
 
 for sim in sims:
@@ -112,17 +112,23 @@ cat1.append(127)
 cat2.append(235)
 cat2.append(277)
 
+# #! Here we manually add our new categories, based on the spreadsheet:
+# #! https://docs.google.com/spreadsheets/d/1sS74Zz6NqjqPqtH6sFTLH-WD5Ek0QppPBB0BPUbGjSg/edit#gid=41793343
+cat1 = [13, 14, 67, 69, 104, 127, 147, 154, 161, 178, 222]
+cat2 = [31, 32, 35, 49, 55, 75, 86, 88, 91, 115, 136, 145, 153, 163, 185, 235, 243, 272, 277, 282]
+cat4 = [26, 82, 97, 122, 177, 181]
+
 #? MAIN PLOTTING CODE.
 
 for case in ['cat1', 'cat2', 'cat3', 'cat4']:
 
     if case == 'cat1':
         data  = cat1
-        nrows = 1
+        nrows = 2
 
     if case == 'cat2':
         data  = cat2
-        nrows = 2
+        nrows = 3
 
     if case == 'cat3':
         data  = cat3

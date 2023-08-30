@@ -53,6 +53,10 @@
 * Associated with the directory `panels`.
 * Creates the older panels for analyzing residue contacts. Now mostly redundant.
 
+`extractProtonations.py`
+* Extracts the time-averaged mean protonation values from paperBarPlots.obj.
+* Makes new selection of 3 categories of residues.
+
 `getNames.py`
 * Helper file for identiying what kind of selections MDAnalysis makes.
 * This was used to do some debugging for `contactData.py`.
