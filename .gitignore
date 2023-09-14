@@ -28,6 +28,7 @@
 *.pickle
 *.dat
 *.xvg
+*.csv
 
 # Image files
 *.png
