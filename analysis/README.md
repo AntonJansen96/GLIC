@@ -57,6 +57,9 @@
 * Extracts the time-averaged mean protonation values from paperBarPlots.obj.
 * Makes new selection of 3 categories of residues.
 
+`finalBarPlot.py`
+* Create the final final plot for figure 2 (and supplemental 2).
+
 `getNames.py`
 * Helper file for identiying what kind of selections MDAnalysis makes.
 * This was used to do some debugging for `contactData.py`.
