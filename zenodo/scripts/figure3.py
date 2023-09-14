@@ -162,8 +162,8 @@ for comb in combs:
         nameList.append('Na+')
         for sim in ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']:
             try:
-                meanList[sim].append(np.mean(superData[sim]['Na+']))
-                serrList[sim].append(np.std(superData[sim]['Na+']) / len(superData[sim]['Na+']))
+                meanList[sim].append(np.mean(list(df1[f"{target}_{sim}_Na+"])))
+                serrList[sim].append(stderr(list(df1[f"{target}_{sim}_Na+"])))
             except KeyError:
                 meanList[sim].append(0.0)
                 serrList[sim].append(0.0)
