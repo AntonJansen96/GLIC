@@ -15,4 +15,6 @@
 
 * 1 microsecond (10 ns/frame) trajectories for each of the four simulation systems and replicas.
 * File names designations: 4HFI = open state structure, 6ZGD = closed state structure, second number is pH, third number is replica.
-* The cph directories contain the 216 lambda coordinates (5 subunits x 43 coordinates (1 for each ASPT/GLUT, 3 for each HSPT) + 1 BUF = 216).
+* The cph directories contain the 216 lambda coordinates.
+  * 1 microsecond (1 ns/frame).
+  * 5 subunits x 43 coordinates (1 for each ASPT/GLUT, 3 for each HSPT) + 1 BUF = 216.
