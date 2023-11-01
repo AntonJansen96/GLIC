@@ -41,14 +41,14 @@ for idx in range(0, len(data)):
     x = np.arange(len([1]))
 
     if data[idx] in ['ASP', 'GLU', 'HIS']:
-        mean1 = [{'ASP': 0.03, 'GLU': 0.06, 'HIS': 0.38}[data[idx]]]
-        mean2 = [{'ASP': 0.41, 'GLU': 0.56, 'HIS': 0.93}[data[idx]]]
+        mean1 = [{'ASP': 0.00, 'GLU': 0.00, 'HIS': 0.25}[data[idx]]]
+        mean2 = [{'ASP': 0.31, 'GLU': 0.64, 'HIS': 1.00}[data[idx]]]
 
         subplt.bar(x - 0.5 * width, mean1, width, color='#8856a7')
-        subplt.text(x - 0.5 * width - 0.14, mean1[0] + 0.01, mean1[0], size=19)
+        subplt.text(x - 0.5 * width - 0.14, mean1[0] + 0.01, f"{mean1[0]:.2f}", size=19)
 
         subplt.bar(x + 0.5 * width, mean2, width, color='#9ebcda')
-        subplt.text(x + 0.5 * width - 0.14, mean2[0] + 0.01, mean2[0], size=19)
+        subplt.text(x + 0.5 * width - 0.14, mean2[0] + 0.01, f"{mean2[0]:.2f}", size=19)
 
     else:
         mean4 = [protoMean['6ZGD_7'][float(data[idx][1:])]]
