@@ -13,7 +13,8 @@ def stderr(array: list) -> float:
 
 sims = ['4HFI_4', '4HFI_7', '6ZGD_4', '6ZGD_7']
 residues = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]
-data = ['ASP', 'GLU', 'HIS'] + ['D31', 'D32', 'E35', 'D49', 'D55', 'E75', 'D86'] + ['E26', 'E82', 'D97'] + ['D88', 'D91', 'D115', 'D136', 'D145', 'D153', 'E163'] + ['D122', 'E177', 'E181'] + ['D185', 'H235', 'E243', 'E272', 'H277', 'E282']
+# data = ['ASP', 'GLU', 'HIS'] + ['E14', 'D31', 'D32', 'E35', 'D49', 'E75'] + ['E26', 'E82', 'D97'] + ['D88', 'D115', 'H127', 'D153', 'D161'] + ['D122', 'E177', 'E181'] + ['D178', 'D185', 'H235', 'E272', 'E282']
+data = ['D13', 'D55', 'E67', 'E69', 'D86', 'D91', 'E104', 'D136', 'D145', 'E147', 'D154', 'E163', 'E222', 'E243', 'H277']
 
 #? LOAD DATA FROM PICKLE OBJECT
 
@@ -25,7 +26,7 @@ for sim in sims:
         protoErr[sim][residue] = stderr(protoMean[sim][residue])
         protoMean[sim][residue] = np.mean(protoMean[sim][residue])
 
-ncols = 10
+ncols = 9
 nrows = 3
 
 fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(1.8 * ncols, 4.5 * nrows), dpi=300)
