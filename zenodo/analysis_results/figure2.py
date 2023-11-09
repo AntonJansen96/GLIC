@@ -23,7 +23,7 @@ matplotlib.rcParams.update({'font.size': 24})
 def stderr(array: list) -> float:
     return np.std(array) / np.sqrt(len(array))
 
-data = ['ASP', 'GLU', 'HIS'] + ['D31', 'D32', 'E35', 'D49', 'D55', 'E75', 'D86'] + ['E26', 'E82', 'D97'] + ['D88', 'D91', 'D115', 'D136', 'D145', 'D153', 'E163'] + ['D122', 'E177', 'E181'] + ['D185', 'H235', 'E243', 'E272', 'H277', 'E282']
+data = ['ASP', 'GLU', 'HIS'] + ['E14', 'D31', 'D32', 'E35', 'D49', 'E75'] + ['E26', 'E82', 'D97'] + ['D88', 'D115', 'H127', 'D153', 'D161', 'D178'] + ['D122', 'E177', 'E181'] + ['D185', 'H235', 'E272', 'E282']
 
 protoErr = makeSuperDict([sims, residues, 0])
 
@@ -32,7 +32,7 @@ for sim in sims:
         protoErr[sim][residue] = stderr(protoMean[sim][residue])
         protoMean[sim][residue] = np.mean(protoMean[sim][residue])
 
-ncols = 10
+ncols = 9
 nrows = 3
 
 fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(1.8 * ncols, 4.5 * nrows), dpi=300)
@@ -48,8 +48,8 @@ for idx in range(0, len(data)):
     x = np.arange(len([1]))
 
     if data[idx] in ['ASP', 'GLU', 'HIS']:
-        mean1 = [{'ASP': 0.03, 'GLU': 0.06, 'HIS': 0.38}[data[idx]]]
-        mean2 = [{'ASP': 0.41, 'GLU': 0.56, 'HIS': 0.93}[data[idx]]]
+        mean1 = [{'ASP': 0.00, 'GLU': 0.00, 'HIS': 0.25}[data[idx]]]
+        mean2 = [{'ASP': 0.31, 'GLU': 0.64, 'HIS': 1.00}[data[idx]]]
 
         subplt.bar(x - 0.5 * width, mean1, width, color='#8856a7')
         subplt.text(x - 0.5 * width - 0.14, mean1[0] + 0.01, mean1[0], size=19)
