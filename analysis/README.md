@@ -103,6 +103,9 @@
 chap
 * Everything related to the CHAP analysis.
 
+revcom
+* Python scripts, analyses, and plots to address the reviewer comments from Nat Comms Biology.
+
 rmsd
 * RMSD of the ECD (residues 18 to 200).
 * Used early on in GLIC analysis process to check for simulation stability.
