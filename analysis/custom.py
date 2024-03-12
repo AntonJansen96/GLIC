@@ -207,7 +207,7 @@ for comb in combs:
 
     a0.set_xticks(x, [fullName])
     a0.set_ylim(0, 1)
-    a0.set_ylabel('Protonation')
+    a0.set_ylabel('Protonation fraction')
 
     #! CONTACTS
 
@@ -232,7 +232,7 @@ for comb in combs:
         a1.set_xticks(x, nameList)
 
     a1.set_ylim(0, 1)
-    a1.set_ylabel('Occupancy')
+    a1.set_ylabel('Contact occupancy')
 
     # plt.legend(prop={'size': 16})
     plt.tight_layout(pad=0.8)

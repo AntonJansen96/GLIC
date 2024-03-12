@@ -84,7 +84,7 @@ for idx in range(0, len(data)):
     if col != 0:
         subplt.set_yticks([])
     else:
-        subplt.set_ylabel('Protonation')
+        subplt.set_ylabel('Protonation fraction', size=27)
         subplt.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
 
     # Increment row and column indices.
