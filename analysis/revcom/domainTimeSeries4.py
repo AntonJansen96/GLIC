@@ -3,6 +3,7 @@
 from science.utility import makeSuperDict
 from science.parsing import loadCol
 
+import os
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -48,7 +49,7 @@ for row in range(0, nrows):
             subplt.plot(t, x, linewidth=0.5)
 
         # Set x-lim and y-lim.
-        subplt.set_ylim([1.5, 5]) # ECD Twist.
+        subplt.set_ylim([1.5, 5.5]) # ECD Twist.
         subplt.set_xlim([0, 1000])
 
         subplt.text(15, 1.65, str(row+1))
@@ -58,7 +59,7 @@ for row in range(0, nrows):
             subplt.set_xticks([])
         else:
             subplt.set_xlabel("Time (ns)")
-            subplt.set_xticks([0, 250, 500, 750, 1000])
+            subplt.set_xticks([200, 400, 600, 800])
 
         # If we're not in the first column, do not show the yticks.
         if col != 0:
@@ -74,3 +75,4 @@ for row in range(0, nrows):
 fig.tight_layout(pad=0.3)
 fig.savefig('9prime.png')
 fig.clf()
+os.system("convert 9prime.png -trim 9prime.png")

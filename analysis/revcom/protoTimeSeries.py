@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-from science.parsing import loadxvg
-from science.cphmd import getLambdaFileIndices
-from science.cphmd import movingDeprotonation
-from science.utility import makeSuperDict
-
 import os
 import numpy as np
 import MDAnalysis
@@ -12,8 +7,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 
-matplotlib.rcParams.update({'font.size': 20})
+from science.cphmd import getLambdaFileIndices
+from science.cphmd import movingDeprotonation
+from science.parsing import loadxvg
+from science.utility import makeSuperDict
 
+matplotlib.rcParams.update({'font.size': 20})  # Set global matplotlib font size.
+
+# Parameters
 resids = [13, 14, 26, 31, 32, 35, 49, 55, 67, 69, 75, 82, 86, 88, 91, 97, 104, 115, 122, 127, 136, 145, 147, 153, 154, 161, 163, 177, 178, 181, 185, 222, 235, 243, 272, 277, 282]
 sims   = ['6ZGD_7', '6ZGD_4', '4HFI_7', '4HFI_4']
 fancy  = ["Closed, pH 7.0", "Closed, pH 4.0", "Open, pH 7.0", "Open, pH 4.0"]
@@ -25,7 +26,7 @@ def task(resid: int, dummy: any):
 
     u = MDAnalysis.Universe("../../sims/4HFI_4/01/CA.pdb")
 
-    nreplicas = len(reps) + 1  # 5
+    nreplicas = len(reps) + 1  # 5, add a plus one for bottom row of 'All' panels.
     nsims = len(sims)          # 4
 
     fig, axs = plt.subplots(nreplicas, nsims, figsize=(17, 9), dpi=200)
@@ -110,7 +111,7 @@ def task(resid: int, dummy: any):
                 subplt.text(15, 0.85, 'All')
 
             # If we're not in the last row, do not show the xticks.
-            subplt.set_xticks([250, 500, 750])
+            subplt.set_xticks([200, 400, 600, 800])
             if repidx != nreplicas - 1:
                 subplt.set_xticklabels([])
                 subplt.xaxis.set_ticks_position('none')

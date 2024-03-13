@@ -73,7 +73,7 @@ for row in range(0, nrows):
             subplt.set_xticks([])
         else:
             subplt.set_xlabel("Time (ns)")
-            subplt.set_xticks([0, 250, 500, 750, 1000])
+            subplt.set_xticks([200, 400, 600, 800])
 
         # If we're not in the first column, do not show the yticks.
         if col != 0:
@@ -88,3 +88,4 @@ for row in range(0, nrows):
 
 fig.tight_layout(pad=0.3)
 fig.savefig('ecdrmsd.png')
+os.system("convert ecdrmsd.png -trim ecdrmsd.png")

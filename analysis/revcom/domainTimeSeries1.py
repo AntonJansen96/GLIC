@@ -3,6 +3,7 @@
 from science.utility import makeSuperDict
 from science.parsing import loadCol
 
+import os
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -58,14 +59,14 @@ for row in range(0, nrows):
             subplt.set_xticks([])
         else:
             subplt.set_xlabel("Time (ns)")
-            subplt.set_xticks([0, 250, 500, 750, 1000])
+            subplt.set_xticks([200, 400, 600, 800])
 
         # If we're not in the first column, do not show the yticks.
         if col != 0:
             subplt.set_yticks([])
         else:
             subplt.set_ylabel(r'ECD Twist ($\AA$)')
-            subplt.set_yticks([-30, -25, -20, -15, -10, -5])
+            subplt.set_yticks([-25, -20, -15, -10])
 
         # Add title to top row.
         if row == 0:
@@ -74,3 +75,4 @@ for row in range(0, nrows):
 fig.tight_layout(pad=0.3)
 fig.savefig('ecdtwist.png')
 fig.clf()
+os.system("convert ecdtwist.png -trim ecdtwist.png")
