@@ -16,7 +16,7 @@ for sim in sims:
     for rep in reps:
         for chain in chains:
 
-            rmsd = loadCol(f"/home/anton/GIT/GLIC/analysis/rmsd/{sim}_{rep}_{chain}.txt", col=2)
+            rmsd = loadCol(f"/home/anton/GIT/GLIC/analysis/revcom/{sim}_{rep}_{chain}.txt", col=2)
 
             if len(rmsd) == 999:                    # This is to take care of
                 rmsd += [rmsd[998]] + [rmsd[998]]   # the fact that some sims

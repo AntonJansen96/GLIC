@@ -103,7 +103,7 @@ for comb in combs:
 
     a0.set_xticks(x, [fullName])
     a0.set_ylim(0, 1)
-    a0.set_ylabel('Protonation')
+    a0.set_ylabel('Protonation fraction')
 
     # CONTACTS
 

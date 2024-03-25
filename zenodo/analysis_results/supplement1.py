@@ -32,8 +32,10 @@ for row in range(0, nrows):
             subplt.plot(t, x, linewidth=0.5)
 
         # Set x-lim and y-lim.
-        subplt.set_ylim([0, 7])
+        subplt.set_ylim([0.5, 4.5])
         subplt.set_xlim([0, 1000])
+
+        subplt.text(15, 4.0, str(row+1))
 
         # If we're not in the last row, do not show the xticks.
         if row != nrows - 1:
@@ -46,8 +48,8 @@ for row in range(0, nrows):
         if col != 0:
             subplt.set_yticks([])
         else:
-            subplt.set_ylabel(r'RMSD ($\AA$)')
-            subplt.set_yticks([0, 2, 4, 6])
+            subplt.set_ylabel(r'ECD RMSD ($\AA$)', size=20)
+            subplt.set_yticks([1, 2, 3, 4])
 
         # Add title to top row.
         if row == 0:
