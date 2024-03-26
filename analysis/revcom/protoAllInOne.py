@@ -48,7 +48,13 @@ else:
                 for chain in chains:
                     num = getLambdaFileIndices(u, resid)[chains.index(chain)]
                     data = loadxvg(f"../../sims/{sim}/{rep:02d}/cphmd-coord-{num}.xvg", dt=1000)
-                    superData[resid][sim][rep][chain] = movingDeprotonation(data[1])
+
+                    if resid in [127, 235, 277]:                                    # HIS
+                        array = [1 - val for val in movingDeprotonation(data[1])]
+                    else:                                                           # Rest
+                        array = movingDeprotonation(data[1])
+
+                    superData[resid][sim][rep][chain] = array
 
     pickleDump(superData, "protoTimeCompact.obj")
 
